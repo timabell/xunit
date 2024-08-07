@@ -118,6 +118,7 @@
         GitAssertModuleCommitId=$(GitAssertModuleCommitId);
         GitCommitId=$(GitCommitId);
         MicrosoftBclAsyncInterfacesVersion=$(MicrosoftBclAsyncInterfacesVersion);
+        MicrosoftTestingPlatformVersion=$(MicrosoftTestingPlatformVersion);
         MonoCecilVersion=$(MonoCecilVersion);
         PackageVersion=$(PackageVersion);
         SignedPath=$(SignedPath);
