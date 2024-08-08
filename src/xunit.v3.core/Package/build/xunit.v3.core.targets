@@ -27,6 +27,10 @@
   </Choose>
 
   <!-- Generate the entry point -->
+  <PropertyGroup>
+    <UseMicrosoftTestingPlatformRunner Condition=" '$(UseMicrosoftTestingPlatformRunner)' == '' ">false</UseMicrosoftTestingPlatformRunner>
+  </PropertyGroup>
+
   <ItemGroup>
     <XunitGeneratedFilePath Include="$(IntermediateOutputPath)XunitGeneratedEntryPoint.cs" Condition=" '$(Language)' == 'C#' "/>
     <XunitGeneratedFilePath Include="$(IntermediateOutputPath)XunitGeneratedEntryPoint.fs" Condition=" '$(Language)' == 'F#' "/>
@@ -40,7 +44,8 @@
     <XunitGenerateEntryPoint
         GeneratedFileName="@(XunitGeneratedFilePath)"
         Language="$(Language)"
-        TestingPlatformBuilderHooks="@(TestingPlatformBuilderHook)"/>
+        TestingPlatformBuilderHooks="@(TestingPlatformBuilderHook)"
+        UseMicrosoftTestingPlatformRunner="$(UseMicrosoftTestingPlatformRunner)"/>
     <ItemGroup>
       <Compile Include="@(XunitGeneratedFilePath)" Visible="false" Condition=" '$(Language)' != 'F#' " />
       <CompileAfter Include="@(XunitGeneratedFilePath)" Visible="false" Condition=" '$(Language)' == 'F#' " />
