@@ -15,7 +15,7 @@ using Xunit.Sdk;
 namespace Xunit.Runner.v2;
 
 /// <summary>
-/// This class be used to do discovery and execution of xUnit.net v2 tests.
+/// This class is used to do discovery and execution of xUnit.net v2 tests.
 /// Discovery can be source-based; execution requires a file-system based assembly.
 /// Runner authors are strongly encouraged to use <see cref="XunitFrontController"/>
 /// instead of using this class directly, unless you are doing source-based
@@ -219,7 +219,7 @@ public class Xunit2 : IFrontController
 	}
 
 	/// <inheritdoc/>
-	public int? Find(
+	public void Find(
 		Sdk.IMessageSink messageSink,
 		FrontControllerFindSettings settings)
 	{
@@ -249,12 +249,10 @@ public class Xunit2 : IFrontController
 
 			SendDiscoveryCompleteMessage(messageSink, filteringMessageSink.TestCasesToRun);
 		});
-
-		return null;
 	}
 
 	/// <inheritdoc/>
-	public int? FindAndRun(
+	public void FindAndRun(
 		Sdk.IMessageSink messageSink,
 		FrontControllerFindAndRunSettings settings)
 	{
@@ -296,8 +294,6 @@ public class Xunit2 : IFrontController
 					Xunit2OptionsAdapter.Adapt(settings.ExecutionOptions)
 				);
 		});
-
-		return null;
 	}
 
 	static string GetExecutionAssemblyFileName(AppDomainSupport appDomainSupport, string basePath)
@@ -451,6 +447,7 @@ public class Xunit2 : IFrontController
 					messageSink.OnMessage(new TestCaseStarting
 					{
 						AssemblyUniqueID = TestAssemblyUniqueID,
+						Explicit = false,
 						SkipReason = null,
 						SourceFilePath = null,
 						SourceLineNumber = null,
@@ -584,7 +581,7 @@ public class Xunit2 : IFrontController
 	}
 
 	/// <inheritdoc/>
-	public int? Run(
+	public void Run(
 		Sdk.IMessageSink messageSink,
 		FrontControllerRunSettings settings)
 	{
@@ -603,8 +600,6 @@ public class Xunit2 : IFrontController
 				CreateOptimizedRemoteMessageSink(messageSink),
 				Xunit2OptionsAdapter.Adapt(settings.Options)
 			);
-
-		return null;
 	}
 
 	void SendDiscoveryStartingMessage(Sdk.IMessageSink messageSink)

@@ -15,7 +15,7 @@ using Xunit.Sdk;
 namespace Xunit.Runner.v1;
 
 /// <summary>
-/// This class be used to do discovery and execution of xUnit.net v1 tests.
+/// This class is used to do discovery and execution of xUnit.net v1 tests.
 /// Runner authors are strongly encouraged to use <see cref="XunitFrontController"/>
 /// instead of using this class directly.
 /// </summary>
@@ -138,7 +138,7 @@ public class Xunit1 : IFrontController
 	}
 
 	/// <inheritdoc/>
-	public int? Find(
+	public void Find(
 		IMessageSink messageSink,
 		FrontControllerFindSettings settings)
 	{
@@ -150,8 +150,6 @@ public class Xunit1 : IFrontController
 			settings.Options.GetIncludeSourceInformationOrDefault(),
 			settings.Filters.Empty ? null : settings.Filters.Filter
 		);
-
-		return null;
 	}
 
 	void Find(
@@ -280,7 +278,7 @@ public class Xunit1 : IFrontController
 	}
 
 	/// <inheritdoc/>
-	public int? FindAndRun(
+	public void FindAndRun(
 		IMessageSink messageSink,
 		FrontControllerFindAndRunSettings settings)
 	{
@@ -294,8 +292,6 @@ public class Xunit1 : IFrontController
 			settings.Filters.Empty ? null : settings.Filters.Filter,
 			settings.ExecutionOptions.GetExplicitOptionOrDefault() == ExplicitOption.Only
 		);
-
-		return null;
 	}
 
 	/// <summary>
@@ -365,7 +361,7 @@ public class Xunit1 : IFrontController
 	}
 
 	/// <inheritdoc/>
-	public int? Run(
+	public void Run(
 		IMessageSink messageSink,
 		FrontControllerRunSettings settings)
 	{
@@ -380,8 +376,6 @@ public class Xunit1 : IFrontController
 				.CastOrToReadOnlyCollection();
 
 		Run(testCases, messageSink, settings.Options.GetExplicitOptionOrDefault() == ExplicitOption.Only);
-
-		return null;
 	}
 
 	Xunit1RunSummary RunTestCollection(
