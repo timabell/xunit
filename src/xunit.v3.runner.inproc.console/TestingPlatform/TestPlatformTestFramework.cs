@@ -73,8 +73,6 @@ public sealed class TestPlatformTestFramework :
 		operationCounter.Wait();
 		operationCounter.Dispose();
 
-		consoleHelper.WriteLine();
-
 		return Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
 	}
 
@@ -89,7 +87,6 @@ public sealed class TestPlatformTestFramework :
 		if (!operationCounterBySessionUid.TryAdd(context.SessionUid, new CountdownEvent(1)))
 			return Task.FromResult(new CreateTestSessionResult { IsSuccess = false, ErrorMessage = string.Format(CultureInfo.CurrentCulture, "Attempted to reuse session UID {0} already in progress", context.SessionUid.Value) });
 
-		consoleHelper.WriteLine();
 		ProjectAssemblyRunner.PrintHeader(consoleHelper);
 
 		return Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
@@ -141,11 +138,11 @@ public sealed class TestPlatformTestFramework :
 		{
 			var diagnosticMessages = projectAssembly.Configuration.DiagnosticMessagesOrDefault;
 			var internalDiagnosticMessages = projectAssembly.Configuration.InternalDiagnosticMessagesOrDefault;
-			var pipelineStartup = await ProjectAssemblyRunner.InvokePipelineStartup(testAssembly, consoleHelper, automated: false, noColor: true, diagnosticMessages, internalDiagnosticMessages);
+			var pipelineStartup = await ProjectAssemblyRunner.InvokePipelineStartup(testAssembly, consoleHelper, automatedMode: AutomatedMode.Off, noColor: true, diagnosticMessages, internalDiagnosticMessages);
 
 			try
 			{
-				var projectRunner = new ProjectAssemblyRunner(testAssembly, consoleHelper, () => context.CancellationToken.IsCancellationRequested, automated: false);
+				var projectRunner = new ProjectAssemblyRunner(testAssembly, consoleHelper, () => context.CancellationToken.IsCancellationRequested, automatedMode: AutomatedMode.Off);
 				await callback(projectRunner, pipelineStartup);
 				context.Complete();
 			}
@@ -193,16 +190,16 @@ public sealed class TestPlatformTestFramework :
 	/// Runs the test project.
 	/// </summary>
 	/// <param name="args">The command line arguments that were passed to the executable</param>
-	/// <param name="extensionTypes">The extensions that need to be registered</param>
+	/// <param name="extensionRegistration">The extension registration callback</param>
 	/// <returns>The return code to be returned from Main</returns>
 	public static async Task<int> RunAsync(
 		string[] args,
-		params Type[] extensionTypes)
+		Action<ITestApplicationBuilder, string[]> extensionRegistration)
 	{
 		Guard.ArgumentNotNull(args);
-		Guard.ArgumentNotNull(extensionTypes);
+		Guard.ArgumentNotNull(extensionRegistration);
 
-		var consoleHelper = new ConsoleHelper(Console.Out);
+		var consoleHelper = new ConsoleHelper(Console.In, Console.Out);
 
 		// Create the XunitProject and XunitProjectAssembly
 		var project = new XunitProject();
@@ -220,21 +217,14 @@ public sealed class TestPlatformTestFramework :
 
 		// Get the reporter and its message handler
 		// TODO: Check for environmental reporter
-		var logger = new ConsoleRunnerLogger(!project.Configuration.NoColorOrDefault, project.Configuration.UseAnsiColorOrDefault, consoleHelper);
+		var logger = new ConsoleRunnerLogger(!project.Configuration.NoColorOrDefault, project.Configuration.UseAnsiColorOrDefault, consoleHelper, waitForAcknowledgment: false);
 		var reporter = new DefaultRunnerReporter();
 		var reporterMessageHandler = await reporter.CreateMessageHandler(logger, diagnosticMessageSink);
 
 		// Construct the VSTest TestApplication and run
 		var builder = await TestApplication.CreateBuilderAsync(args);
 		Register(reporterMessageHandler, builder, projectAssembly, testAssembly, consoleHelper);
-
-		Type[] addExtensionsParamTypes = [typeof(ITestApplicationBuilder), typeof(string[])];
-		foreach (var type in extensionTypes)
-			type
-				.GetMethod("AddExtensions", BindingFlags.Static | BindingFlags.Public, null, addExtensionsParamTypes, null)
-				?.Invoke(null, [builder, args]);
-
-		// Add extensions
+		extensionRegistration(builder, args);
 		var app = await builder.BuildAsync();
 		return await app.RunAsync();
 	}

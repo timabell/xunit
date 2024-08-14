@@ -8,8 +8,8 @@
     <MicrosoftNetCoreAppRefVersion>8.0.5</MicrosoftNetCoreAppRefVersion>
     <MicrosoftNetFrameworkReferenceAssembliesVersion>1.0.3</MicrosoftNetFrameworkReferenceAssembliesVersion>
     <MicrosoftSourceLinkGitHubVersion>8.0.0</MicrosoftSourceLinkGitHubVersion>
-    <MicrosoftTestingPlatformVersion>1.3.2</MicrosoftTestingPlatformVersion>
-    <NerdbankGitVersioningVersion>3.6.139</NerdbankGitVersioningVersion>
+    <MicrosoftTestingPlatformVersion>1.4.0-preview.24414.8</MicrosoftTestingPlatformVersion>
+    <NerdbankGitVersioningVersion>3.6.141</NerdbankGitVersioningVersion>
     <TunnelVisionLabsReferenceAssemblyAnnotatorVersion>1.0.0-alpha.160</TunnelVisionLabsReferenceAssemblyAnnotatorVersion>
     <XunitAnalyzersVersion>1.16.0-pre.23</XunitAnalyzersVersion>
 
@@ -36,8 +36,8 @@
     <SystemMemoryVersion>4.5.5</SystemMemoryVersion>
     <XunitAbstractionsVersion>2.0.3</XunitAbstractionsVersion>
     <XunitV1Version>1.9.2</XunitV1Version>
-    <XunitV2Version>2.9.1-pre.9</XunitV2Version>
-    <XunitVisualStudioRunnerVersion>3.0.0-pre.21</XunitVisualStudioRunnerVersion>
+    <XunitV2Version>2.9.1-pre.10</XunitV2Version>
+    <XunitVisualStudioRunnerVersion>3.0.0-pre.29</XunitVisualStudioRunnerVersion>
 
   </PropertyGroup>
 

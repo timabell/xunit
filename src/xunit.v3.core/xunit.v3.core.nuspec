@@ -16,10 +16,12 @@
 		<repository type="git" url="https://github.com/xunit/xunit" commit="$GitCommitId$" />
 		<dependencies>
 			<group targetFramework="net472">
+				<dependency id="Microsoft.Testing.Platform.MSBuild" version="$MicrosoftTestingPlatformVersion$" />
 				<dependency id="xunit.v3.extensibility.core" version="[$PackageVersion$]" />
 				<dependency id="xunit.v3.runner.inproc.console" version="[$PackageVersion$]" />
 			</group>
 			<group targetFramework="net6.0">
+				<dependency id="Microsoft.Testing.Platform.MSBuild" version="$MicrosoftTestingPlatformVersion$" />
 				<dependency id="xunit.v3.extensibility.core" version="[$PackageVersion$]" />
 				<dependency id="xunit.v3.runner.inproc.console" version="[$PackageVersion$]" />
 			</group>
@@ -28,7 +30,7 @@
 	<files>
 		<file target="_content\" src="..\..\tools\media\logo-128-transparent.png" />
 		<file target="_content\" src="..\..\README.md" />
-		<file target="_content\" src="..\xunit.v3.core.buildtasks\bin\$Configuration$\netstandard2.0\$SignedPath$xunit.v3.core.buildtasks.dll" />
+		<file target="_content\" src="Package\content\*" />
 
 		<file target="build\" src="Package\build\*" />
 

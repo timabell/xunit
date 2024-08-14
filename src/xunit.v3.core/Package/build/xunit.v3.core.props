@@ -9,8 +9,10 @@
   <PropertyGroup>
     <!-- Turn off Microsoft.NET.Test.Sdk's auto-generated entrypoint -->
     <GenerateProgramFile>false</GenerateProgramFile>
-    <!-- This is incorrect, but the only way to make it work today https://github.com/microsoft/testfx/issues/3478#issuecomment-2272076139 -->
-    <GenerateTestingPlatformEntryPoint>true</GenerateTestingPlatformEntryPoint>
+    <!-- Turn on Microsoft.Testing.Platform.MSBuild's auto-generated registration function -->
+    <GenerateSelfRegisteredExtensions>true</GenerateSelfRegisteredExtensions>
+    <!-- Turn off Microsoft.Testing.Platform.MSBuild's auto-generated entrypoint -->
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
     <TestProject>true</TestProject>
