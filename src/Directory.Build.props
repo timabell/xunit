@@ -95,10 +95,17 @@
       <PropertyGroup>
         <ApplicationManifest>..\xunit.v3.runner.console\app.manifest</ApplicationManifest>
         <GenerateProgramFile>false</GenerateProgramFile>
+        <GenerateSelfRegisteredExtensions>true</GenerateSelfRegisteredExtensions>
+        <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
         <NoWarn>$(NoWarn);xUnit1000</NoWarn>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
       </PropertyGroup>
+
+      <ItemGroup>
+        <ProjectCapability Include="TestingPlatformServer" />
+        <ProjectCapability Include="TestContainer" />
+      </ItemGroup>
 
       <ItemGroup>
         <Compile Include="..\common.tests\**\*.cs" LinkBase="Common.Tests" />
@@ -106,6 +113,7 @@
 
       <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNetTestSdkVersion)" />
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" />
         <PackageReference Include="NSubstitute" Version="$(NSubstituteVersion)" />
         <PackageReference Include="xunit.analyzers" Version="$(XunitAnalyzersVersion)" PrivateAssets="all" />
         <PackageReference Include="xunit.runner.visualstudio" Version="$(XunitVisualStudioRunnerVersion)" PrivateAssets="all" />
