@@ -16,4 +16,24 @@ internal static class TaskExtensions
 
 		task.GetAwaiter().GetResult();
 	}
+
+	public static T SpinWait<T>(this Task<T> task)
+	{
+		var spin = default(SpinWait);
+
+		while (!task.IsCompleted)
+			spin.SpinOnce();
+
+		return task.GetAwaiter().GetResult();
+	}
+
+	public static T SpinWait<T>(this ValueTask<T> task)
+	{
+		var spin = default(SpinWait);
+
+		while (!task.IsCompleted)
+			spin.SpinOnce();
+
+		return task.GetAwaiter().GetResult();
+	}
 }
