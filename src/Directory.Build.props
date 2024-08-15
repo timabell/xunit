@@ -92,6 +92,13 @@
   <!-- V3-specific test projects -->
   <Choose>
     <When Condition=" $(MSBuildProjectName.Contains('.v3.')) AND $(MSBuildProjectName.EndsWith('.tests')) ">
+      <!--
+      To convert to the Microsoft.Testing.Platform command line UX, add property:
+        <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+
+      To enable Microsoft.Testing.Platform.MSBuild's 'dotnet test' override, add property:
+        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+      -->
       <PropertyGroup>
         <ApplicationManifest>..\xunit.v3.runner.console\app.manifest</ApplicationManifest>
         <GenerateProgramFile>false</GenerateProgramFile>
