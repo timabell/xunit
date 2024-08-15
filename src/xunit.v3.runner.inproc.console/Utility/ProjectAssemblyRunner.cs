@@ -89,13 +89,17 @@ public sealed class ProjectAssemblyRunner(
 		var frontController = new InProcessFrontController(testFramework, testAssembly, assembly.ConfigFileName);
 
 		await frontController.Find(
-			messageSink ?? NullMessageSink.Instance,
+			messageSink,
 			discoveryOptions,
 			assembly.Configuration.Filters.Filter,
 			types,
 			(testCase, passedFilter) =>
 			{
 				testCases?.Add((testCase, passedFilter));
+
+				if (passedFilter && messageSink?.OnMessage(testCase.ToTestCaseDiscovered()) == false)
+					return new(false);
+
 				return new(!cancelThunk());
 			}
 		);
