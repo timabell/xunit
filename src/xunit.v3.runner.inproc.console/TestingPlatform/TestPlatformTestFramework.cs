@@ -177,11 +177,13 @@ public sealed class TestPlatformTestFramework :
 		var builder = await TestApplication.CreateBuilderAsync(args);
 		extensionRegistration(builder, args);
 
+		builder.CommandLine.AddProvider(() => new CommandLineOptions());
 		builder.RegisterTestFramework(
 			serviceProvider => new TestFrameworkCapabilities(),
 			(capabilities, serviceProvider) =>
 			{
 				var logger = serviceProvider.GetLoggerFactory().CreateLogger("xUnit.net");
+				var commandLineOptions = serviceProvider.GetCommandLineOptions();
 
 				// Create the XunitProject and XunitProjectAssembly
 				var project = new XunitProject();
@@ -197,9 +199,13 @@ public sealed class TestPlatformTestFramework :
 				var internalDiagnosticMessages = projectAssembly.Configuration.InternalDiagnosticMessagesOrDefault;
 				var diagnosticMessageSink = LoggerDiagnosticMessageSink.TryCreate(logger, diagnosticMessages, internalDiagnosticMessages);
 
+				// Use a runner logger which reports to the MTP logger, plus an option to enable output via IOutputDevice as well
+				IRunnerLogger runnerLogger = new LoggerRunnerLogger(logger);
+				if (commandLineOptions.IsOptionSet("xunit-info"))
+					runnerLogger = new OutputDeviceRunnerLogger(serviceProvider.GetOutputDevice(), runnerLogger);
+
 				// Get the reporter and its message handler
 				// TODO: Check for environmental reporter
-				var runnerLogger = new LoggerRunnerLogger(logger);
 				var reporter = new DefaultRunnerReporter();
 				var reporterMessageHandler = reporter.CreateMessageHandler(runnerLogger, diagnosticMessageSink).SpinWait();
 

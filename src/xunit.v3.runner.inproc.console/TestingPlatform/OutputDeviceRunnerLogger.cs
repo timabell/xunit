@@ -7,10 +7,13 @@ using Xunit.Runner.Common;
 namespace Xunit.Runner.InProc.SystemConsole.TestingPlatform;
 
 /// <summary>
-/// An implementation of <see cref="IRunnerLogger"/> that delegates to <see cref="IOutputDevice"/>.
+/// An implementation of <see cref="IRunnerLogger"/> that delegates to <see cref="IOutputDevice"/>
+/// as well as optionally to an inner logger.
 /// </summary>
-public class OutputDeviceRunnerLogger(IOutputDevice outputDevice) :
-	IRunnerLogger, IOutputDeviceDataProducer
+public class OutputDeviceRunnerLogger(
+	IOutputDevice outputDevice,
+	IRunnerLogger? innerLogger) :
+		IRunnerLogger, IOutputDeviceDataProducer
 {
 	/// <inheritdoc/>
 	public string Description =>
@@ -38,30 +41,45 @@ public class OutputDeviceRunnerLogger(IOutputDevice outputDevice) :
 	/// <inheritdoc/>
 	public void LogError(
 		StackFrameInfo stackFrame,
-		string message) =>
-			outputDevice.DisplayAsync(this, ToMessageWithColor(message, ConsoleColor.Red)).SpinWait();
+		string message)
+	{
+		outputDevice.DisplayAsync(this, ToMessageWithColor(message, ConsoleColor.Red)).SpinWait();
+		innerLogger?.LogError(stackFrame, message);
+	}
 
 	/// <inheritdoc/>
 	public void LogImportantMessage(
 		StackFrameInfo stackFrame,
-		string message) =>
-			outputDevice.DisplayAsync(this, ToMessageWithColor(message, ConsoleColor.Gray)).SpinWait();
+		string message)
+	{
+		outputDevice.DisplayAsync(this, ToMessageWithColor(message, ConsoleColor.Gray)).SpinWait();
+		innerLogger?.LogImportantMessage(stackFrame, message);
+	}
 
 	/// <inheritdoc/>
 	public void LogMessage(
 		StackFrameInfo stackFrame,
-		string message) =>
-			outputDevice.DisplayAsync(this, ToMessageWithColor(message, ConsoleColor.DarkGray)).SpinWait();
+		string message)
+	{
+		outputDevice.DisplayAsync(this, ToMessageWithColor(message, ConsoleColor.DarkGray)).SpinWait();
+		innerLogger?.LogMessage(stackFrame, message);
+	}
 
 	/// <inheritdoc/>
-	public void LogRaw(string message) =>
+	public void LogRaw(string message)
+	{
 		outputDevice.DisplayAsync(this, new TextOutputDeviceData(message)).SpinWait();
+		innerLogger?.LogRaw(message);
+	}
 
 	/// <inheritdoc/>
 	public void LogWarning(
 		StackFrameInfo stackFrame,
-		string message) =>
-			outputDevice.DisplayAsync(this, ToMessageWithColor(message, ConsoleColor.Yellow)).SpinWait();
+		string message)
+	{
+		outputDevice.DisplayAsync(this, ToMessageWithColor(message, ConsoleColor.Yellow)).SpinWait();
+		innerLogger?.LogWarning(stackFrame, message);
+	}
 
 	static IOutputDeviceData ToMessageWithColor(
 		string message,
