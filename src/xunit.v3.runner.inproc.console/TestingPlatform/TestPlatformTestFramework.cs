@@ -183,7 +183,6 @@ public sealed class TestPlatformTestFramework :
 			(capabilities, serviceProvider) =>
 			{
 				var logger = serviceProvider.GetLoggerFactory().CreateLogger("xUnit.net");
-				var commandLineOptions = serviceProvider.GetCommandLineOptions();
 
 				// Create the XunitProject and XunitProjectAssembly
 				var project = new XunitProject();
@@ -193,6 +192,16 @@ public sealed class TestPlatformTestFramework :
 				var projectAssembly = new XunitProjectAssembly(project, Path.GetFullPath(assemblyFileName), new(3, targetFramework)) { Assembly = testAssembly };
 				ConfigReader_Json.Load(projectAssembly.Configuration, projectAssembly.AssemblyFileName);
 				project.Add(projectAssembly);
+
+				// Read command line options
+				var commandLineOptions = serviceProvider.GetCommandLineOptions();
+				if (commandLineOptions.TryGetOptionArgumentList("culture", out var arguments))
+					projectAssembly.Configuration.Culture = arguments[0].ToUpperInvariant() switch
+					{
+						"DEFAULT" => null,
+						"INVARIANT" => string.Empty,
+						_ => arguments[0]
+					};
 
 				// Get a diagnostic message sink
 				var diagnosticMessages = projectAssembly.Configuration.DiagnosticMessagesOrDefault;
