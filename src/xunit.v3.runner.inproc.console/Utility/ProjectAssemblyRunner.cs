@@ -171,13 +171,15 @@ public sealed class ProjectAssemblyRunner(
 	/// <param name="diagnosticMessageSink">The optional message sink to send diagnostic messages to</param>
 	/// <param name="runnerLogger">The runner logger, to log console output to</param>
 	/// <param name="pipelineStartup">The pipeline startup object</param>
+	/// <param name="testCaseIDsToRun">An optional list of test case unique IDs to run</param>
 	/// <returns>Returns <c>0</c> if there were no failures; non-<c>zero</c> failure count, otherwise</returns>
 	public async ValueTask<int> Run(
 		XunitProjectAssembly assembly,
 		IMessageSink messageSink,
 		IMessageSink? diagnosticMessageSink,
 		IRunnerLogger runnerLogger,
-		ITestPipelineStartup? pipelineStartup)
+		ITestPipelineStartup? pipelineStartup,
+		HashSet<string>? testCaseIDsToRun = null)
 	{
 		Guard.ArgumentNotNull(assembly);
 		Guard.ArgumentNotNull(messageSink);
@@ -238,7 +240,14 @@ public sealed class ProjectAssemblyRunner(
 			if (testCases.Length != 0)
 				await frontController.Run(resultsSink, executionOptions, testCases);
 			else
-				await frontController.FindAndRun(resultsSink, discoveryOptions, executionOptions, assembly.Configuration.Filters.Filter);
+			{
+				Func<ITestCaseMetadata, bool> filter = testCaseIDsToRun switch
+				{
+					not null => metadata => testCaseIDsToRun.Contains(metadata.UniqueID) && assembly.Configuration.Filters.Filter(metadata),
+					_ => assembly.Configuration.Filters.Filter,
+				};
+				await frontController.FindAndRun(resultsSink, discoveryOptions, executionOptions, filter);
+			}
 
 			TestExecutionSummaries.Add(frontController.TestAssemblyUniqueID, resultsSink.ExecutionSummary);
 

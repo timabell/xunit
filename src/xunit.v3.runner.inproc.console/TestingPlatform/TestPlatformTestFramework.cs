@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -126,8 +127,14 @@ public sealed class TestPlatformTestFramework :
 		RunTestExecutionRequest request) =>
 			OnRequest(requestContext, async (projectRunner, pipelineStartup) =>
 			{
+				var testCaseIDsToRun = request.Filter switch
+				{
+					TestNodeUidListFilter filter => filter.TestNodeUids.Select(u => u.Value).ToHashSet(StringComparer.OrdinalIgnoreCase),
+					_ => null,
+				};
+
 				var messageHandler = new TestPlatformExecutionMessageSink(innerSink, requestContext, request);
-				await projectRunner.Run(projectAssembly, messageHandler, diagnosticMessageSink, runnerLogger, pipelineStartup);
+				await projectRunner.Run(projectAssembly, messageHandler, diagnosticMessageSink, runnerLogger, pipelineStartup, testCaseIDsToRun);
 			});
 
 	async ValueTask OnRequest(
