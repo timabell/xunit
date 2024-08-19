@@ -202,12 +202,13 @@ public sealed class TestPlatformTestFramework :
 				// Get a diagnostic message sink
 				var diagnosticMessages = projectAssembly.Configuration.DiagnosticMessagesOrDefault;
 				var internalDiagnosticMessages = projectAssembly.Configuration.InternalDiagnosticMessagesOrDefault;
-				var diagnosticMessageSink = LoggerDiagnosticMessageSink.TryCreate(logger, diagnosticMessages, internalDiagnosticMessages);
+				var outputDevice = serviceProvider.GetOutputDevice();
+				var diagnosticMessageSink = OutputDeviceDiagnosticMessageSink.TryCreate(logger, outputDevice, diagnosticMessages, internalDiagnosticMessages);
 
 				// Use a runner logger which reports to the MTP logger, plus an option to enable output via IOutputDevice as well
 				IRunnerLogger runnerLogger = new LoggerRunnerLogger(logger);
 				if (commandLineOptions.IsOptionSet("xunit-info"))
-					runnerLogger = new OutputDeviceRunnerLogger(serviceProvider.GetOutputDevice(), runnerLogger);
+					runnerLogger = new OutputDeviceRunnerLogger(outputDevice, runnerLogger);
 
 				// Get the reporter and its message handler
 				// TODO: Check for environmental reporter
