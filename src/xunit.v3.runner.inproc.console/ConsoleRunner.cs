@@ -223,7 +223,12 @@ public class ConsoleRunner(
 				if (project.Configuration.List is not null)
 					await ListAssembly(projectAssembly, logger);
 				else
+				{
+					// Default to false for console runners
+					projectAssembly.Configuration.PreEnumerateTheories ??= false;
+
 					failCount = await projectRunner.Run(projectAssembly, reporterMessageHandler, diagnosticMessageSink, logger, pipelineStartup);
+				}
 
 				if (cancel)
 					return -1073741510;    // 0xC000013A: The application terminated as a result of a CTRL+C
@@ -282,6 +287,9 @@ public class ConsoleRunner(
 		var (listOption, listFormat) = assembly.Project.Configuration.List!.Value;
 		if (automatedMode != AutomatedMode.Off)
 			listFormat = ListFormat.Json;
+
+		// Default to false for console runners
+		assembly.Configuration.PreEnumerateTheories ??= false;
 
 		var assemblyFileName = Guard.ArgumentNotNull(assembly.AssemblyFileName);
 		var projectRunner = new ProjectAssemblyRunner(testAssembly, () => cancel, automatedMode);

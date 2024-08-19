@@ -68,9 +68,6 @@ public sealed class ProjectAssemblyRunner(
 	{
 		Guard.ArgumentNotNull(assembly);
 
-		// Default to false for console runners
-		assembly.Configuration.PreEnumerateTheories ??= false;
-
 		// Setup discovery options with command-line overrides
 		var discoveryOptions = TestFrameworkOptions.ForDiscovery(assembly.Configuration);
 		var diagnosticMessages = assembly.Configuration.DiagnosticMessagesOrDefault;
@@ -197,9 +194,6 @@ public sealed class ProjectAssemblyRunner(
 
 		try
 		{
-			// Default to false for console runners
-			assembly.Configuration.PreEnumerateTheories ??= false;
-
 			// Setup discovery and execution options with command-line overrides
 			var discoveryOptions = TestFrameworkOptions.ForDiscovery(assembly.Configuration);
 			var executionOptions = TestFrameworkOptions.ForExecution(assembly.Configuration);

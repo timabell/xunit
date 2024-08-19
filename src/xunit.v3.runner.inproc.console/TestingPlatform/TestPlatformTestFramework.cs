@@ -118,6 +118,10 @@ public sealed class TestPlatformTestFramework :
 		DiscoverTestExecutionRequest request) =>
 			OnRequest(requestContext, async (projectRunner, pipelineStartup) =>
 			{
+				// Default to true for Testing Platform
+				// TODO: We'd prefer true for Test Explorer and false for `dotnet test`
+				projectAssembly.Configuration.PreEnumerateTheories ??= true;
+
 				var messageHandler = new TestPlatformDiscoveryMessageSink(innerSink, requestContext, request, projectAssembly.Assembly!.FullName!);
 				await projectRunner.Discover(projectAssembly, pipelineStartup, messageHandler);
 			});
@@ -132,6 +136,10 @@ public sealed class TestPlatformTestFramework :
 					TestNodeUidListFilter filter => filter.TestNodeUids.Select(u => u.Value).ToHashSet(StringComparer.OrdinalIgnoreCase),
 					_ => null,
 				};
+
+				// Default to true for Testing Platform
+				// TODO: We'd prefer true for Test Explorer and false for `dotnet test`
+				projectAssembly.Configuration.PreEnumerateTheories ??= true;
 
 				var messageHandler = new TestPlatformExecutionMessageSink(innerSink, requestContext, request);
 				await projectRunner.Run(projectAssembly, messageHandler, diagnosticMessageSink, runnerLogger, pipelineStartup, testCaseIDsToRun);
