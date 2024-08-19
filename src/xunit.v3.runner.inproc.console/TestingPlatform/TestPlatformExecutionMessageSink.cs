@@ -65,7 +65,7 @@ internal sealed class TestPlatformExecutionMessageSink(
 
 		var result = new TestNode
 		{
-			Uid = testMessage.TestUniqueID,
+			Uid = testMessage.TestCaseUniqueID,
 			DisplayName = testStarting?.TestDisplayName ?? "<unknown test display name>",
 		};
 
