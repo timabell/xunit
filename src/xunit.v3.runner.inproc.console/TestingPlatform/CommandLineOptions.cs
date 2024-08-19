@@ -7,20 +7,9 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Xunit.Runner.InProc.SystemConsole.TestingPlatform;
 
-internal sealed class CommandLineOptions : ICommandLineOptionsProvider
+internal sealed class CommandLineOptions() :
+	ExtensionBase("command line options provider", "7e0a6fd0-3615-48b0-859c-6bb4f51c3095"), ICommandLineOptionsProvider
 {
-	public string Description =>
-		"xUnit.net v3 Microsoft.Testing.Platform command line options provider";
-
-	public string DisplayName =>
-		Description;
-
-	public string Uid =>
-		"7e0a6fd0-3615-48b0-859c-6bb4f51c3095";
-
-	public string Version =>
-		ThisAssembly.AssemblyVersion;
-
 	public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
 	[
 		new CommandLineOption(
@@ -36,9 +25,6 @@ internal sealed class CommandLineOptions : ICommandLineOptionsProvider
 			false
 		),
 	];
-
-	public Task<bool> IsEnabledAsync() =>
-		Task.FromResult(true);
 
 	public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) =>
 		ValidationResult.ValidTask;

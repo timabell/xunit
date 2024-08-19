@@ -3,19 +3,12 @@ using Xunit.Sdk;
 
 namespace Xunit.Runner.InProc.SystemConsole.TestingPlatform;
 
-/// <summary>
-/// An implementation of <see cref="IMessageSink"/> to log diagnostic messages to the Microsoft.Testing.Platform logger.
-/// </summary>
-/// <param name="logger">The logger</param>
-/// <param name="diagnosticMessages">The flag to indicate if we should report diagnostic messages</param>
-/// <param name="internalDiagnosticMessages">The flag to indicate if we should report internal diagnostic messages</param>
-public class LoggerDiagnosticMessageSink(
+internal sealed class LoggerDiagnosticMessageSink(
 	ILogger logger,
 	bool diagnosticMessages,
 	bool internalDiagnosticMessages) :
 		IMessageSink
 {
-	/// <inheritdoc/>
 	public bool OnMessage(IMessageSinkMessage message)
 	{
 		if (diagnosticMessages && message is IDiagnosticMessage diagnosticMessage)
@@ -26,9 +19,6 @@ public class LoggerDiagnosticMessageSink(
 		return true;
 	}
 
-	/// <summary>
-	/// Factory method to create the diagnostic message sink.
-	/// </summary>
 	public static IMessageSink? TryCreate(
 		ILogger logger,
 		bool diagnosticMessages,

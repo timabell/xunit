@@ -27,7 +27,7 @@ namespace Xunit.Runner.InProc.SystemConsole.TestingPlatform;
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed class TestPlatformTestFramework :
-	VSTest_ITestFramework
+	ExtensionBase, VSTest_ITestFramework
 {
 	readonly IMessageSink? diagnosticMessageSink;
 	readonly IMessageSink innerSink;
@@ -41,7 +41,8 @@ public sealed class TestPlatformTestFramework :
 		IMessageSink innerSink,
 		IMessageSink? diagnosticMessageSink,
 		XunitProjectAssembly projectAssembly,
-		Assembly testAssembly)
+		Assembly testAssembly) :
+			base("test framework", "30ea7c6e-dd24-4152-a360-1387158cd41d")
 	{
 		this.runnerLogger = runnerLogger;
 		this.innerSink = innerSink;
@@ -49,22 +50,6 @@ public sealed class TestPlatformTestFramework :
 		this.projectAssembly = projectAssembly;
 		this.testAssembly = testAssembly;
 	}
-
-	/// <inheritdoc/>
-	public string Description =>
-		"xUnit.net v3 Microsoft.Testing.Platform test framework";
-
-	/// <inheritdoc/>
-	public string DisplayName =>
-		Description;
-
-	/// <inheritdoc/>
-	public string Uid =>
-		"30ea7c6e-dd24-4152-a360-1387158cd41d";
-
-	/// <inheritdoc/>
-	public string Version =>
-		ThisAssembly.AssemblyVersion;
 
 	/// <inheritdoc/>
 	public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
@@ -108,10 +93,6 @@ public sealed class TestPlatformTestFramework :
 		else if (context.Request is RunTestExecutionRequest executionRequest)
 			await OnExecute(context, executionRequest);
 	}
-
-	/// <inheritdoc/>
-	public Task<bool> IsEnabledAsync() =>
-		Task.FromResult(true);
 
 	ValueTask OnDiscover(
 		ExecuteRequestContext requestContext,

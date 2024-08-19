@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Requests;
@@ -14,27 +13,12 @@ internal sealed class TestPlatformExecutionMessageSink(
 	IMessageSink innerSink,
 	ExecuteRequestContext requestContext,
 	RunTestExecutionRequest request) :
-		IMessageSink, IDataProducer
+		ExtensionBase("execution message sink", "fa7e6681-c892-4741-9980-724bd818f1f1"), IMessageSink, IDataProducer
 {
 	readonly MessageMetadataCache metadataCache = new();
 
 	public Type[] DataTypesProduced =>
 		[typeof(TestNodeUpdateMessage)];
-
-	public string Description =>
-		"xUnit.net v3 Microsoft.Testing.Platform execution message sink";
-
-	public string DisplayName =>
-		Description;
-
-	public string Uid =>
-		"fa7e6681-c892-4741-9980-724bd818f1f1";
-
-	public string Version =>
-		ThisAssembly.AssemblyVersion;
-
-	public Task<bool> IsEnabledAsync() =>
-		Task.FromResult(true);
 
 	public bool OnMessage(IMessageSinkMessage message)
 	{

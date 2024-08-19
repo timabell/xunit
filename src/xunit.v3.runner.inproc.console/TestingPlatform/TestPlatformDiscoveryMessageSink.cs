@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Requests;
@@ -15,25 +14,10 @@ internal sealed class TestPlatformDiscoveryMessageSink(
 	ExecuteRequestContext requestContext,
 	DiscoverTestExecutionRequest request,
 	string assemblyFullName) :
-		IMessageSink, IDataProducer
+		ExtensionBase("discovery message sink", "b1ef01c2-95f4-4411-b6ef-19e290225124"), IMessageSink, IDataProducer
 {
 	public Type[] DataTypesProduced =>
 		[typeof(TestNodeUpdateMessage)];
-
-	public string Description =>
-		"xUnit.net v3 Microsoft.Testing.Platform discovery message sink";
-
-	public string DisplayName =>
-		Description;
-
-	public string Uid =>
-		"b1ef01c2-95f4-4411-b6ef-19e290225124";
-
-	public string Version =>
-		ThisAssembly.AssemblyVersion;
-
-	public Task<bool> IsEnabledAsync() =>
-		Task.FromResult(true);
 
 	public bool OnMessage(IMessageSinkMessage message)
 	{
