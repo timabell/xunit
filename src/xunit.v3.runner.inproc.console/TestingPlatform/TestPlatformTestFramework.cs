@@ -118,7 +118,7 @@ public sealed class TestPlatformTestFramework :
 		DiscoverTestExecutionRequest request) =>
 			OnRequest(requestContext, async (projectRunner, pipelineStartup) =>
 			{
-				var messageHandler = new TestPlatformDiscoveryMessageSink(innerSink, requestContext, request, projectAssembly.AssemblyFileName);
+				var messageHandler = new TestPlatformDiscoveryMessageSink(innerSink, requestContext, request, projectAssembly.Assembly!.FullName!);
 				await projectRunner.Discover(projectAssembly, pipelineStartup, messageHandler);
 			});
 

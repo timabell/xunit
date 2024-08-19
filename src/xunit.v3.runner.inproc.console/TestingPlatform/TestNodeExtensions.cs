@@ -10,12 +10,12 @@ internal static class TestNodeExtensions
 	public static void AddMetadata(
 		this TestNode result,
 		ITestCaseMetadata testCase,
-		string assemblyPath)
+		string assemblyFullName)
 	{
 		if (testCase.TestClassName is not null && testCase.TestMethodName is not null)
 			result.Properties.Add(
 				new TestMethodIdentifierProperty(
-					assemblyPath,
+					assemblyFullName,
 					testCase.TestClassNamespace ?? string.Empty,
 					testCase.TestClassName,
 					testCase.TestMethodName,

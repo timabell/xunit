@@ -93,7 +93,7 @@ internal sealed class TestPlatformExecutionMessageSink(
 		var testAssemblyMetadata = metadataCache.TryGetAssemblyMetadata(testMessage);
 		var testCaseMetadata = metadataCache.TryGetTestCaseMetadata(testMessage);
 		if (testAssemblyMetadata is not null && testCaseMetadata is not null)
-			result.AddMetadata(testCaseMetadata, testAssemblyMetadata.AssemblyPath);
+			result.AddMetadata(testCaseMetadata, testAssemblyMetadata.AssemblyName);
 
 		result.SendUpdate(this, request.Session.SessionUid, requestContext);
 	}

@@ -14,7 +14,7 @@ internal sealed class TestPlatformDiscoveryMessageSink(
 	IMessageSink innerSink,
 	ExecuteRequestContext requestContext,
 	DiscoverTestExecutionRequest request,
-	string assemblyPath) :
+	string assemblyFullName) :
 		IMessageSink, IDataProducer
 {
 	public Type[] DataTypesProduced =>
@@ -51,7 +51,7 @@ internal sealed class TestPlatformDiscoveryMessageSink(
 
 		var result = new TestNode { Uid = discovered.TestCaseUniqueID, DisplayName = discovered.TestCaseDisplayName };
 		result.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
-		result.AddMetadata(discovered, assemblyPath);
+		result.AddMetadata(discovered, assemblyFullName);
 		result.SendUpdate(this, request.Session.SessionUid, requestContext);
 	}
 }
