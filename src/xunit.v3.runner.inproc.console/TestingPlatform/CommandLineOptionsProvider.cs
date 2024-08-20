@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Xunit.Internal;
@@ -16,7 +17,7 @@ namespace Xunit.Runner.InProc.SystemConsole.TestingPlatform;
 internal sealed class CommandLineOptionsProvider() :
 	ExtensionBase("command line options provider", "7e0a6fd0-3615-48b0-859c-6bb4f51c3095"), ICommandLineOptionsProvider
 {
-	static readonly Dictionary<string, (string Description, ArgumentArity Arity, Action<string[], TestProjectConfiguration, TestAssemblyConfiguration> Parse)> options = new(StringComparer.OrdinalIgnoreCase)
+	static readonly Dictionary<string, (string Description, ArgumentArity Arity, Action<ParseOptions> Parse)> options = new(StringComparer.OrdinalIgnoreCase)
 	{
 		// General options
 		{ "culture", ("Run tests under the given culture. The available values are: 'default' (system culture) [default], 'invariant' (invariant culture), and any system culture (i.e., 'en-US').", ArgumentArity.ExactlyOne, OnCulture) },
@@ -36,47 +37,52 @@ internal sealed class CommandLineOptionsProvider() :
 		{ "xunit-internal-diagnostics", ("Determine whether to show internal diagnostic messages. The available values are: 'on', 'off' [default]", ArgumentArity.ExactlyOne, OnInternalDiagnostics) },
 
 		// Filtering
-		{ "filter-class", ("Run all methods in a given test class. Pass one or more fully qualified type names (i.e., 'MyNamespace.MyClass' or 'MyNamespace.MyClass+InnerClass'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, (arguments, _, assemblyConfig) => OnFilter(arguments, assemblyConfig.Filters.IncludedClasses)) },
-		{ "filter-not-class", ("Do not run any methods in the given test class. Pass one or more fully qualified type names (i.e., 'MyNamspace.MyClass', or 'MyNamspace.MyClass+InnerClass'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, (arguments, _, assemblyConfig) => OnFilter(arguments, assemblyConfig.Filters.ExcludedClasses)) },
-		{ "filter-method", ("Run a given test method. Pass one ore more fully qualified method names or wildcards (i.e. 'MyNamespace.MyClass.MyTestMethod' or '*.MyTestMethod'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, (arguments, _, assemblyConfig) => OnFilter(arguments, assemblyConfig.Filters.IncludedMethods)) },
-		{ "filter-not-method", ("Do not run a given test method. Pass one ore more fully qualified method names or wildcards (i.e., 'MyNamspace.MyClass.MyTestMethod', or '*.MyTestMethod'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, (arguments, _, assemblyConfig) => OnFilter(arguments, assemblyConfig.Filters.ExcludedMethods)) },
-		{ "filter-namespace", ("Run all methods in the given namespace. Pass one or more namespaces (i.e. 'MyNamespace' or 'MyNamespace.MySubNamespace'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, (arguments, _, assemblyConfig) => OnFilter(arguments, assemblyConfig.Filters.IncludedNamespaces)) },
-		{ "filter-not-namespace", ("Do not run any methods in the given namespace. Pass one or more namespaces (i.e. 'MyNamespace' or 'MyNamespace.MySubNamespace'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, (arguments, _, assemblyConfig) => OnFilter(arguments, assemblyConfig.Filters.ExcludedNamespaces)) },
-		{ "filter-trait", ("Run all methods with a given trait value. Pass one or more name/value pairs (i.e. 'name=value'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, (arguments, _, assemblyConfig) => OnFilterTrait(arguments, assemblyConfig.Filters.IncludedTraits)) },
-		{ "filter-not-trait", ("Do not run any methods with a given trait value. Pass one or more name/value pairs (i.e., 'name=value'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, (arguments, _, assemblyConfig) => OnFilterTrait(arguments, assemblyConfig.Filters.ExcludedTraits)) },
+		{ "filter-class", ("Run all methods in a given test class. Pass one or more fully qualified type names (i.e., 'MyNamespace.MyClass' or 'MyNamespace.MyClass+InnerClass'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.IncludedClasses)) },
+		{ "filter-not-class", ("Do not run any methods in the given test class. Pass one or more fully qualified type names (i.e., 'MyNamspace.MyClass', or 'MyNamspace.MyClass+InnerClass'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.ExcludedClasses)) },
+		{ "filter-method", ("Run a given test method. Pass one ore more fully qualified method names or wildcards (i.e. 'MyNamespace.MyClass.MyTestMethod' or '*.MyTestMethod'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.IncludedMethods)) },
+		{ "filter-not-method", ("Do not run a given test method. Pass one ore more fully qualified method names or wildcards (i.e., 'MyNamspace.MyClass.MyTestMethod', or '*.MyTestMethod'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.ExcludedMethods)) },
+		{ "filter-namespace", ("Run all methods in the given namespace. Pass one or more namespaces (i.e. 'MyNamespace' or 'MyNamespace.MySubNamespace'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.IncludedNamespaces)) },
+		{ "filter-not-namespace", ("Do not run any methods in the given namespace. Pass one or more namespaces (i.e. 'MyNamespace' or 'MyNamespace.MySubNamespace'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.ExcludedNamespaces)) },
+		{ "filter-trait", ("Run all methods with a given trait value. Pass one or more name/value pairs (i.e. 'name=value'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, options => OnFilterTrait(options.Arguments, options.AssemblyConfig.Filters.IncludedTraits)) },
+		{ "filter-not-trait", ("Do not run any methods with a given trait value. Pass one or more name/value pairs (i.e., 'name=value'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, options => OnFilterTrait(options.Arguments, options.AssemblyConfig.Filters.ExcludedTraits)) },
 
 		// Reports
-		{ "report-ctrf", ("Output results to CTRF file. Pass an output filename.", ArgumentArity.ExactlyOne, (arguments, projectConfig, _) => OnReport("ctrf", arguments[0], projectConfig)) },
-		{ "report-html", ("Output results to HTML file. Pass an output filename.", ArgumentArity.ExactlyOne, (arguments, projectConfig, _) => OnReport("html", arguments[0], projectConfig)) },
-		{ "report-junit", ("Output results to JUnit XML file. Pass an output filename.", ArgumentArity.ExactlyOne, (arguments, projectConfig, _) => OnReport("junit", arguments[0], projectConfig)) },
-		{ "report-nunit", ("Output results to NUnit 2.5 XML file. Pass an output filename.", ArgumentArity.ExactlyOne, (arguments, projectConfig, _) => OnReport("nunit", arguments[0], projectConfig)) },
-		{ "report-xml", ("Output results to xUnit.net v2+ XML file. Pass an output filename.", ArgumentArity.ExactlyOne, (arguments, projectConfig, _) => OnReport("xml", arguments[0], projectConfig)) },
+		{ "report-ctrf", ("Enable generating CTRF report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "ctrf", "report-ctrf-filename", options.ProjectConfig)) },
+		{ "report-ctrf-filename", ("The name of the generated CTRF report", ArgumentArity.ExactlyOne, OnReportFilename) },
+		{ "report-html", ("Enable generating HTML report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "html", "report-html-filename", options.ProjectConfig)) },
+		{ "report-html-filename", ("The name of the generated HTML report", ArgumentArity.ExactlyOne, OnReportFilename) },
+		{ "report-junit", ("Enable generating JUnit report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "junit", "report-junit-filename", options.ProjectConfig)) },
+		{ "report-junit-filename", ("The name of the generated JUnit report", ArgumentArity.ExactlyOne, OnReportFilename) },
+		{ "report-nunit", ("Enable generating NUnit 2.5 report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "nunit", "report-nunit-filename", options.ProjectConfig)) },
+		{ "report-nunit-filename", ("The name of the generated NUnit 2.5 report", ArgumentArity.ExactlyOne, OnReportFilename) },
+		{ "report-xunit-xml", ("Enable generating xUnit.net v2+ XML report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "xml", "report-xunit-xml-filename", options.ProjectConfig)) },
+		{ "report-xunit-xml-filename", ("The name of the generated xUnit.net v2+ XML report", ArgumentArity.ExactlyOne, OnReportFilename) },
 
 		// Non-configuration options (read externally)
-		{ "xunit-info", ("Show xUnit.net headers and information", ArgumentArity.Zero, (_1, _2, _3) => { }) },
+		{ "xunit-info", ("Show xUnit.net headers and information", ArgumentArity.Zero, NoOp) },
 	};
+	static readonly Dictionary<string, string> optionDependencies = new()
+	{
+		{ "report-ctrf-filename", "report-ctrf" },
+		{ "report-html-filename", "report-html" },
+		{ "report-junit-filename", "report-junit" },
+		{ "report-nunit-filename", "report-nunit" },
+		{ "report-xunit-xml-filename", "report-xunit-xml" },
+	};
+	// Match the format used by Microsoft.Testing.Extensions.TrxReport
+	static readonly string reportFileNameRoot = string.Format(CultureInfo.InvariantCulture, "{0}_{1}_{2:yyyy-MM-dd_HH_mm_ss.FFF}.", Environment.UserName, Environment.MachineName, DateTimeOffset.UtcNow);
 
 	public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
 		options.Select(option => new CommandLineOption(option.Key, option.Value.Description, option.Value.Arity, isHidden: false)).ToArray();
 
-	static void EnsurePathExists(string path)
+	static void NoOp(ParseOptions options)
+	{ }
+
+	static void OnCulture(ParseOptions options)
 	{
-		var directory = Path.GetDirectoryName(path);
+		var culture = options.Arguments[0];
 
-		if (string.IsNullOrEmpty(directory))
-			return;
-
-		Directory.CreateDirectory(directory);
-	}
-
-	static void OnCulture(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig)
-	{
-		var culture = arguments[0];
-
-		assemblyConfig.Culture = culture.ToUpperInvariant() switch
+		options.AssemblyConfig.Culture = culture.ToUpperInvariant() switch
 		{
 			"DEFAULT" => null,
 			"INVARIANT" => string.Empty,
@@ -85,7 +91,7 @@ internal sealed class CommandLineOptionsProvider() :
 
 		// Validate the provided culture; this isn't foolproof, since the system will accept random names, but it
 		// will catch some simple cases like trying to pass a number as the culture
-		if (!string.IsNullOrWhiteSpace(assemblyConfig.Culture))
+		if (!string.IsNullOrWhiteSpace(options.AssemblyConfig.Culture))
 		{
 			try
 			{
@@ -98,29 +104,17 @@ internal sealed class CommandLineOptionsProvider() :
 		}
 	}
 
-	static void OnDiagnostics(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.DiagnosticMessages = ParseOnOff(arguments[0]);
+	static void OnDiagnostics(ParseOptions options) =>
+		options.AssemblyConfig.DiagnosticMessages = ParseOnOff(options.Arguments[0]);
 
-	static void OnExplicit(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.ExplicitOption = ParseEnum<ExplicitOption>(arguments[0]);
+	static void OnExplicit(ParseOptions options) =>
+		options.AssemblyConfig.ExplicitOption = ParseEnum<ExplicitOption>(options.Arguments[0]);
 
-	static void OnFailSkips(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.FailSkips = ParseOnOff(arguments[0]);
+	static void OnFailSkips(ParseOptions options) =>
+		options.AssemblyConfig.FailSkips = ParseOnOff(options.Arguments[0]);
 
-	static void OnFailWarns(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.FailTestsWithWarnings = ParseOnOff(arguments[0]);
+	static void OnFailWarns(ParseOptions options) =>
+		options.AssemblyConfig.FailTestsWithWarnings = ParseOnOff(options.Arguments[0]);
 
 	static void OnFilter(
 		string[] arguments,
@@ -139,121 +133,110 @@ internal sealed class CommandLineOptionsProvider() :
 				values.Add(pieces[0], pieces[1]);
 			});
 
-	static void OnInternalDiagnostics(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.InternalDiagnosticMessages = ParseOnOff(arguments[0]);
+	static void OnInternalDiagnostics(ParseOptions options) =>
+		options.AssemblyConfig.InternalDiagnosticMessages = ParseOnOff(options.Arguments[0]);
 
-	static void OnMaxThreads(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.MaxParallelThreads = arguments[0].ToUpperInvariant() switch
-			{
-				"0" => null,
-				"DEFAULT" => null,
-				"UNLIMITED" => -1,
-				_ => ParseMaxThreadsValue(arguments[0]),
-			};
-
-	static void OnMethodDisplay(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.MethodDisplay = ParseEnum<TestMethodDisplay>(arguments[0]);
-
-	static void OnMethodDisplayOptions(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig)
-	{
-		if (arguments.Any(a => a.Equals("all", StringComparison.OrdinalIgnoreCase)))
+	static void OnMaxThreads(ParseOptions options) =>
+		options.AssemblyConfig.MaxParallelThreads = options.Arguments[0].ToUpperInvariant() switch
 		{
-			if (arguments.Length > 1)
+			"0" => null,
+			"DEFAULT" => null,
+			"UNLIMITED" => -1,
+			_ => ParseMaxThreadsValue(options.Arguments[0]),
+		};
+
+	static void OnMethodDisplay(ParseOptions options) =>
+		options.AssemblyConfig.MethodDisplay = ParseEnum<TestMethodDisplay>(options.Arguments[0]);
+
+	static void OnMethodDisplayOptions(ParseOptions options)
+	{
+		if (options.Arguments.Any(a => a.Equals("all", StringComparison.OrdinalIgnoreCase)))
+		{
+			if (options.Arguments.Length > 1)
 				throw new ArgumentException("Cannot specify 'all' with any other values");
 
-			assemblyConfig.MethodDisplayOptions = TestMethodDisplayOptions.All;
+			options.AssemblyConfig.MethodDisplayOptions = TestMethodDisplayOptions.All;
 		}
-		else if (arguments.Any(a => a.Equals("none", StringComparison.OrdinalIgnoreCase)))
+		else if (options.Arguments.Any(a => a.Equals("none", StringComparison.OrdinalIgnoreCase)))
 		{
-			if (arguments.Length > 1)
+			if (options.Arguments.Length > 1)
 				throw new ArgumentException("Cannot specify 'none' with any other values");
 
-			assemblyConfig.MethodDisplayOptions = TestMethodDisplayOptions.None;
+			options.AssemblyConfig.MethodDisplayOptions = TestMethodDisplayOptions.None;
 		}
 		else
 		{
-			assemblyConfig.MethodDisplayOptions = TestMethodDisplayOptions.None;
+			options.AssemblyConfig.MethodDisplayOptions = TestMethodDisplayOptions.None;
 
-			foreach (var argument in arguments)
-				assemblyConfig.MethodDisplayOptions |= ParseEnum<TestMethodDisplayOptions>(argument);
+			foreach (var argument in options.Arguments)
+				options.AssemblyConfig.MethodDisplayOptions |= ParseEnum<TestMethodDisplayOptions>(argument);
 		}
 	}
 
-	static void OnParallel(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.ParallelizeTestCollections = arguments[0].ToUpperInvariant() switch
-			{
-				"NONE" => false,
-				"COLLECTIONS" => true,
-				_ => throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Invalid value '{0}' (must be one of 'none', 'collections')", arguments[0])),
-			};
+	static void OnParallel(ParseOptions options) =>
+		options.AssemblyConfig.ParallelizeTestCollections = options.Arguments[0].ToUpperInvariant() switch
+		{
+			"NONE" => false,
+			"COLLECTIONS" => true,
+			_ => throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Invalid value '{0}' (must be one of: 'none', 'collections')", options.Arguments[0])),
+		};
 
-	static void OnParallelAlgorithm(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.ParallelAlgorithm = ParseEnum<ParallelAlgorithm>(arguments[0]);
+	static void OnParallelAlgorithm(ParseOptions options) =>
+		options.AssemblyConfig.ParallelAlgorithm = ParseEnum<ParallelAlgorithm>(options.Arguments[0]);
 
-	static void OnPreEnumerateTheories(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.PreEnumerateTheories = ParseOnOff(arguments[0]);
-
-	static void OnSeed(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig)
-	{
-		if (!int.TryParse(arguments[0], NumberStyles.None, NumberFormatInfo.CurrentInfo, out int seed) || seed < 0)
-			throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Invalid value '{0}' (must be an integer in the range of 0 - 2147483647)", arguments[0]));
-
-		assemblyConfig.Seed = seed;
-	}
+	static void OnPreEnumerateTheories(ParseOptions options) =>
+		options.AssemblyConfig.PreEnumerateTheories = ParseOnOff(options.Arguments[0]);
 
 	static void OnReport(
+		IConfiguration? configuration,
+		ICommandLineOptions? commandLineOptions,
 		string transform,
-		string pathName,
+		string filenameOption,
 		TestProjectConfiguration projectConfig)
 	{
-		EnsurePathExists(pathName);
-		projectConfig.Output.Add(transform, pathName);
+		// If this is the validation from ValidateOptionArgumentsAsync, there's nothing to validate
+		if (configuration is null || commandLineOptions is null)
+			return;
+
+		var outputFileName = Path.Combine(
+			configuration.GetTestResultDirectory(),
+			commandLineOptions.TryGetOptionArgumentList(filenameOption, out var filenameArguments)
+				? filenameArguments[0]
+				: reportFileNameRoot + transform
+		);
+
+		projectConfig.Output.Add(transform, outputFileName);
 	}
 
-	static void OnShowLiveOutput(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.ShowLiveOutput = ParseOnOff(arguments[0]);
+	static void OnReportFilename(ParseOptions options)
+	{
+		// Pure validation only, actual setting of configuration value is done in OnReport
+		if (!string.IsNullOrWhiteSpace(Path.GetDirectoryName(options.Arguments[0])))
+			throw new ArgumentException("Report file name may not contain a path (use --results-directory to set the report output path)");
+	}
 
-	static void OnStopOnFail(
-		string[] arguments,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig) =>
-			assemblyConfig.StopOnFail = ParseOnOff(arguments[0]);
+	static void OnSeed(ParseOptions options)
+	{
+		if (!int.TryParse(options.Arguments[0], NumberStyles.None, NumberFormatInfo.CurrentInfo, out int seed) || seed < 0)
+			throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Invalid value '{0}' (must be an integer in the range of 0 - 2147483647)", options.Arguments[0]));
+
+		options.AssemblyConfig.Seed = seed;
+	}
+
+	static void OnShowLiveOutput(ParseOptions options) =>
+		options.AssemblyConfig.ShowLiveOutput = ParseOnOff(options.Arguments[0]);
+
+	static void OnStopOnFail(ParseOptions options) =>
+		options.AssemblyConfig.StopOnFail = ParseOnOff(options.Arguments[0]);
 
 	public static void Parse(
+		IConfiguration configuration,
 		ICommandLineOptions commandLineOptions,
-		TestProjectConfiguration projectConfig,
-		TestAssemblyConfiguration assemblyConfig)
+		XunitProjectAssembly projectAssembly)
 	{
 		foreach (var option in options)
 			if (commandLineOptions.TryGetOptionArgumentList(option.Key, out var arguments))
-				option.Value.Parse(arguments, projectConfig, assemblyConfig);
+				option.Value.Parse(new ParseOptions(arguments, projectAssembly.Configuration, projectAssembly.Project.Configuration, configuration, commandLineOptions));
 	}
 
 	static TEnum ParseEnum<TEnum>(string value)
@@ -262,7 +245,7 @@ internal sealed class CommandLineOptionsProvider() :
 		if (Enum.TryParse<TEnum>(value, ignoreCase: true, out var result))
 			return result;
 
-		throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Invalid value '{0}' (must be one of {1})", value, string.Join(", ", Enum.GetValues(typeof(TEnum)).OfType<object>().Select(e => "'" + e + "'"))));
+		throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Invalid value '{0}' (must be one of: {1})", value, string.Join(", ", Enum.GetValues(typeof(TEnum)).OfType<object>().Select(e => "'" + e + "'"))));
 	}
 
 	static int ParseMaxThreadsValue(string value)
@@ -277,7 +260,7 @@ internal sealed class CommandLineOptionsProvider() :
 		if (int.TryParse(value, out var threadValue) && threadValue > 0)
 			return threadValue;
 
-		throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Invalid value '{0}' (must be one of 'default', 'unlimited', a positive number, a multiplier in the form of '{1}x')", value, 0.0m));
+		throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Invalid value '{0}' (must be one of: 'default', 'unlimited', a positive number, a multiplier in the form of '{1}x')", value, 0.0m));
 	}
 
 	static bool ParseOnOff(string value) =>
@@ -285,22 +268,16 @@ internal sealed class CommandLineOptionsProvider() :
 		{
 			"ON" => true,
 			"OFF" => false,
-			_ => throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Invalid value '{0}' (must be 'on', 'off')", value)),
+			_ => throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Invalid value '{0}' (must be one of: 'on', 'off')", value)),
 		};
 
 	public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
 	{
-		try
-		{
-			var projectConfig = new TestProjectConfiguration();
-			var assemblyConfig = new TestAssemblyConfiguration();
-			Parse(commandLineOptions, projectConfig, assemblyConfig);
-			return ValidationResult.ValidTask;
-		}
-		catch (ArgumentException argEx)
-		{
-			return ValidationResult.InvalidTask(argEx.Message);
-		}
+		foreach (var optionDependency in optionDependencies)
+			if (commandLineOptions.IsOptionSet(optionDependency.Key) && !commandLineOptions.IsOptionSet(optionDependency.Value))
+				return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, "'--{0}' requires '--{1}' to be enabled", optionDependency.Key, optionDependency.Value));
+
+		return ValidationResult.ValidTask;
 	}
 
 	public Task<ValidationResult> ValidateOptionArgumentsAsync(
@@ -313,7 +290,7 @@ internal sealed class CommandLineOptionsProvider() :
 			{
 				var projectConfig = new TestProjectConfiguration();
 				var assemblyConfig = new TestAssemblyConfiguration();
-				option.Parse(arguments, projectConfig, assemblyConfig);
+				option.Parse(new ParseOptions(arguments, assemblyConfig, projectConfig));
 			}
 			catch (ArgumentException argEx)
 			{
@@ -322,5 +299,23 @@ internal sealed class CommandLineOptionsProvider() :
 		}
 
 		return ValidationResult.ValidTask;
+	}
+
+	sealed class ParseOptions(
+		string[] arguments,
+		TestAssemblyConfiguration assemblyConfiguration,
+		TestProjectConfiguration projectConfiguration,
+		IConfiguration? configuration = null,
+		ICommandLineOptions? commandLineOptions = null)
+	{
+		public string[] Arguments { get; } = arguments;
+
+		public TestAssemblyConfiguration AssemblyConfig { get; } = assemblyConfiguration;
+
+		public ICommandLineOptions? CommandLineOptions { get; } = commandLineOptions;
+
+		public IConfiguration? Configuration { get; } = configuration;
+
+		public TestProjectConfiguration ProjectConfig { get; } = projectConfiguration;
 	}
 }

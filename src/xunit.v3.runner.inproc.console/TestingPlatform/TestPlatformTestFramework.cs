@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
@@ -27,7 +28,7 @@ namespace Xunit.Runner.InProc.SystemConsole.TestingPlatform;
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed class TestPlatformTestFramework :
-	ExtensionBase, VSTest_ITestFramework
+	ExtensionBase, VSTest_ITestFramework, IDataProducer
 {
 	readonly IMessageSink? diagnosticMessageSink;
 	readonly IMessageSink innerSink;
@@ -50,6 +51,10 @@ public sealed class TestPlatformTestFramework :
 		this.projectAssembly = projectAssembly;
 		this.testAssembly = testAssembly;
 	}
+
+	/// <inheritdoc/>
+	public Type[] DataTypesProduced =>
+		[typeof(SessionFileArtifact)];
 
 	/// <inheritdoc/>
 	public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
@@ -124,6 +129,9 @@ public sealed class TestPlatformTestFramework :
 
 				var messageHandler = new TestPlatformExecutionMessageSink(innerSink, requestContext, request);
 				await projectRunner.Run(projectAssembly, messageHandler, diagnosticMessageSink, runnerLogger, pipelineStartup, testCaseIDsToRun);
+
+				foreach (var output in projectAssembly.Project.Configuration.Output)
+					await requestContext.MessageBus.PublishAsync(this, new SessionFileArtifact(request.Session.SessionUid, new FileInfo(output.Value), Path.GetFileNameWithoutExtension(output.Value)));
 			});
 
 	async ValueTask OnRequest(
@@ -191,7 +199,7 @@ public sealed class TestPlatformTestFramework :
 
 				// Read command line options
 				var commandLineOptions = serviceProvider.GetCommandLineOptions();
-				CommandLineOptionsProvider.Parse(commandLineOptions, project.Configuration, projectAssembly.Configuration);
+				CommandLineOptionsProvider.Parse(serviceProvider.GetConfiguration(), commandLineOptions, projectAssembly);
 
 				// Get a diagnostic message sink
 				var diagnosticMessages = projectAssembly.Configuration.DiagnosticMessagesOrDefault;
