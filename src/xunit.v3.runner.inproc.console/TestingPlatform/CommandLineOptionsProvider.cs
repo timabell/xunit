@@ -47,16 +47,16 @@ internal sealed class CommandLineOptionsProvider() :
 		{ "filter-not-trait", ("Do not run any methods with a given trait value. Pass one or more name/value pairs (i.e., 'name=value'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, options => OnFilterTrait(options.Arguments, options.AssemblyConfig.Filters.ExcludedTraits)) },
 
 		// Reports
-		{ "report-ctrf", ("Enable generating CTRF report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "ctrf", "report-ctrf-filename", options.ProjectConfig)) },
+		{ "report-ctrf", ("Enable generating CTRF (JSON) report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "ctrf", "ctrf", options.ProjectConfig)) },
 		{ "report-ctrf-filename", ("The name of the generated CTRF report", ArgumentArity.ExactlyOne, OnReportFilename) },
-		{ "report-html", ("Enable generating HTML report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "html", "report-html-filename", options.ProjectConfig)) },
+		{ "report-html", ("Enable generating HTML report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "html", "html", options.ProjectConfig)) },
 		{ "report-html-filename", ("The name of the generated HTML report", ArgumentArity.ExactlyOne, OnReportFilename) },
-		{ "report-junit", ("Enable generating JUnit report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "junit", "report-junit-filename", options.ProjectConfig)) },
+		{ "report-junit", ("Enable generating JUnit (XML) report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "junit", "junit", options.ProjectConfig)) },
 		{ "report-junit-filename", ("The name of the generated JUnit report", ArgumentArity.ExactlyOne, OnReportFilename) },
-		{ "report-nunit", ("Enable generating NUnit 2.5 report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "nunit", "report-nunit-filename", options.ProjectConfig)) },
-		{ "report-nunit-filename", ("The name of the generated NUnit 2.5 report", ArgumentArity.ExactlyOne, OnReportFilename) },
-		{ "report-xunit-xml", ("Enable generating xUnit.net v2+ XML report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "xml", "report-xunit-xml-filename", options.ProjectConfig)) },
-		{ "report-xunit-xml-filename", ("The name of the generated xUnit.net v2+ XML report", ArgumentArity.ExactlyOne, OnReportFilename) },
+		{ "report-nunit", ("Enable generating NUnit (v2.5 XML) report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "nunit", "nunit", options.ProjectConfig)) },
+		{ "report-nunit-filename", ("The name of the generated NUnit report", ArgumentArity.ExactlyOne, OnReportFilename) },
+		{ "report-xunit", ("Enable generating xUnit.net (v2+ XML) report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "xml", "xunit", options.ProjectConfig)) },
+		{ "report-xunit-filename", ("The name of the generated xUnit.net report", ArgumentArity.ExactlyOne, OnReportFilename) },
 
 		// Non-configuration options (read externally)
 		{ "xunit-info", ("Show xUnit.net headers and information", ArgumentArity.Zero, NoOp) },
@@ -191,7 +191,7 @@ internal sealed class CommandLineOptionsProvider() :
 		IConfiguration? configuration,
 		ICommandLineOptions? commandLineOptions,
 		string transform,
-		string filenameOption,
+		string optionName,
 		TestProjectConfiguration projectConfig)
 	{
 		// If this is the validation from ValidateOptionArgumentsAsync, there's nothing to validate
@@ -200,9 +200,9 @@ internal sealed class CommandLineOptionsProvider() :
 
 		var outputFileName = Path.Combine(
 			configuration.GetTestResultDirectory(),
-			commandLineOptions.TryGetOptionArgumentList(filenameOption, out var filenameArguments)
+			commandLineOptions.TryGetOptionArgumentList("report-" + optionName + "-filename", out var filenameArguments)
 				? filenameArguments[0]
-				: reportFileNameRoot + transform
+				: reportFileNameRoot + optionName
 		);
 
 		projectConfig.Output.Add(transform, outputFileName);
