@@ -173,7 +173,7 @@ public sealed class TestPlatformTestFramework :
 		var builder = await TestApplication.CreateBuilderAsync(args);
 		extensionRegistration(builder, args);
 
-		builder.CommandLine.AddProvider(() => new CommandLineOptions());
+		builder.CommandLine.AddProvider(() => new CommandLineOptionsProvider());
 		builder.RegisterTestFramework(
 			serviceProvider => new TestFrameworkCapabilities(),
 			(capabilities, serviceProvider) =>
@@ -191,13 +191,7 @@ public sealed class TestPlatformTestFramework :
 
 				// Read command line options
 				var commandLineOptions = serviceProvider.GetCommandLineOptions();
-				if (commandLineOptions.TryGetOptionArgumentList("culture", out var arguments))
-					projectAssembly.Configuration.Culture = arguments[0].ToUpperInvariant() switch
-					{
-						"DEFAULT" => null,
-						"INVARIANT" => string.Empty,
-						_ => arguments[0]
-					};
+				CommandLineOptionsProvider.Parse(commandLineOptions, project.Configuration, projectAssembly.Configuration);
 
 				// Get a diagnostic message sink
 				var diagnosticMessages = projectAssembly.Configuration.DiagnosticMessagesOrDefault;
