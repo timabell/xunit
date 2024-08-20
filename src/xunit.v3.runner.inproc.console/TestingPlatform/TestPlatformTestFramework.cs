@@ -175,7 +175,7 @@ public sealed class TestPlatformTestFramework :
 
 		builder.CommandLine.AddProvider(() => new CommandLineOptionsProvider());
 		builder.RegisterTestFramework(
-			serviceProvider => new TestFrameworkCapabilities(),
+			serviceProvider => new TestFrameworkCapabilities(new XunitBannerCapability()),
 			(capabilities, serviceProvider) =>
 			{
 				var logger = serviceProvider.GetLoggerFactory().CreateLogger("xUnit.net");
