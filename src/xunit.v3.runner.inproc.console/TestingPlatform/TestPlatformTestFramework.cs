@@ -36,13 +36,15 @@ public sealed class TestPlatformTestFramework :
 	readonly ConcurrentDictionary<SessionUid, CountdownEvent> operationCounterBySessionUid = new();
 	readonly IRunnerLogger runnerLogger;
 	readonly Assembly testAssembly;
+	readonly XunitTrxCapability trxCapability;
 
 	TestPlatformTestFramework(
 		IRunnerLogger runnerLogger,
 		IMessageSink innerSink,
 		IMessageSink? diagnosticMessageSink,
 		XunitProjectAssembly projectAssembly,
-		Assembly testAssembly) :
+		Assembly testAssembly,
+		XunitTrxCapability trxCapability) :
 			base("test framework", "30ea7c6e-dd24-4152-a360-1387158cd41d")
 	{
 		this.runnerLogger = runnerLogger;
@@ -50,6 +52,7 @@ public sealed class TestPlatformTestFramework :
 		this.diagnosticMessageSink = diagnosticMessageSink;
 		this.projectAssembly = projectAssembly;
 		this.testAssembly = testAssembly;
+		this.trxCapability = trxCapability;
 	}
 
 	/// <inheritdoc/>
@@ -127,7 +130,7 @@ public sealed class TestPlatformTestFramework :
 				// TODO: We'd prefer true for Test Explorer and false for `dotnet test`
 				projectAssembly.Configuration.PreEnumerateTheories ??= true;
 
-				var messageHandler = new TestPlatformExecutionMessageSink(innerSink, requestContext, request);
+				var messageHandler = new TestPlatformExecutionMessageSink(innerSink, requestContext, request, trxCapability);
 				await projectRunner.Run(projectAssembly, messageHandler, diagnosticMessageSink, runnerLogger, pipelineStartup, testCaseIDsToRun);
 
 				foreach (var output in projectAssembly.Project.Configuration.Output)
@@ -181,9 +184,11 @@ public sealed class TestPlatformTestFramework :
 		var builder = await TestApplication.CreateBuilderAsync(args);
 		extensionRegistration(builder, args);
 
+		var trxCapability = new XunitTrxCapability();
+
 		builder.CommandLine.AddProvider(() => new CommandLineOptionsProvider());
 		builder.RegisterTestFramework(
-			serviceProvider => new TestFrameworkCapabilities(new XunitBannerCapability()),
+			serviceProvider => new TestFrameworkCapabilities(new XunitBannerCapability(), trxCapability),
 			(capabilities, serviceProvider) =>
 			{
 				var logger = serviceProvider.GetLoggerFactory().CreateLogger("xUnit.net");
@@ -217,7 +222,7 @@ public sealed class TestPlatformTestFramework :
 				var reporter = new DefaultRunnerReporter();
 				var reporterMessageHandler = reporter.CreateMessageHandler(runnerLogger, diagnosticMessageSink).SpinWait();
 
-				return new TestPlatformTestFramework(runnerLogger, reporterMessageHandler, diagnosticMessageSink, projectAssembly, testAssembly);
+				return new TestPlatformTestFramework(runnerLogger, reporterMessageHandler, diagnosticMessageSink, projectAssembly, testAssembly, trxCapability);
 			}
 		);
 

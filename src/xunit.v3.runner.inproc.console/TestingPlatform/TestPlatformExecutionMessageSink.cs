@@ -12,7 +12,8 @@ namespace Xunit.Runner.InProc.SystemConsole.TestingPlatform;
 internal sealed class TestPlatformExecutionMessageSink(
 	IMessageSink innerSink,
 	ExecuteRequestContext requestContext,
-	RunTestExecutionRequest request) :
+	RunTestExecutionRequest request,
+	XunitTrxCapability trxCapability) :
 		ExtensionBase("execution message sink", "fa7e6681-c892-4741-9980-724bd818f1f1"), IMessageSink, IDataProducer
 {
 	readonly MessageMetadataCache metadataCache = new();
@@ -77,7 +78,12 @@ internal sealed class TestPlatformExecutionMessageSink(
 		var testAssemblyMetadata = metadataCache.TryGetAssemblyMetadata(testMessage);
 		var testCaseMetadata = metadataCache.TryGetTestCaseMetadata(testMessage);
 		if (testAssemblyMetadata is not null && testCaseMetadata is not null)
+		{
 			result.AddMetadata(testCaseMetadata, testAssemblyMetadata.AssemblyName);
+
+			if (trxCapability.IsTrxEnabled)
+				result.AddTrxMetadata(testCaseMetadata, testMessage);
+		}
 
 		result.SendUpdate(this, request.Session.SessionUid, requestContext);
 	}
