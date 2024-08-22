@@ -30,7 +30,7 @@
 
     <!-- Used in non-product (test or back-compat) projects -->
     <FSharpCompilerServiceVersion>43.7.200</FSharpCompilerServiceVersion>
-    <MicrosoftNetTestSdkVersion>17.10.0</MicrosoftNetTestSdkVersion>
+    <MicrosoftNetTestSdkVersion>17.11.0</MicrosoftNetTestSdkVersion>
     <MoqVersion>4.17.2</MoqVersion>
     <NSubstituteVersion>5.1.0</NSubstituteVersion>
     <SystemMemoryVersion>4.5.5</SystemMemoryVersion>
