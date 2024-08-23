@@ -90,7 +90,7 @@ internal sealed class CommandLineOptionsProvider() :
 			""", ArgumentArity.ExactlyOne, OnPreEnumerateTheories) },
 		{ "seed", ("""
 			Set the randomization seed.
-			    (integer) - use this as the randomization seed"
+			    (integer) - use this as the randomization seed
 			""", ArgumentArity.ExactlyOne, OnSeed) },
 		{ "show-live-output", ("""
 			Determine whether to show test output (from ITestOutputHelper) live during test execution.
