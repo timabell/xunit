@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
@@ -32,6 +33,7 @@ public sealed class TestPlatformTestFramework :
 {
 	readonly IMessageSink? diagnosticMessageSink;
 	readonly IMessageSink innerSink;
+	readonly IOutputDevice outputDevice;
 	readonly XunitProjectAssembly projectAssembly;
 	readonly ConcurrentDictionary<SessionUid, CountdownEvent> operationCounterBySessionUid = new();
 	readonly IRunnerLogger runnerLogger;
@@ -44,7 +46,8 @@ public sealed class TestPlatformTestFramework :
 		IMessageSink? diagnosticMessageSink,
 		XunitProjectAssembly projectAssembly,
 		Assembly testAssembly,
-		XunitTrxCapability trxCapability) :
+		XunitTrxCapability trxCapability,
+		IOutputDevice outputDevice) :
 			base("test framework", "30ea7c6e-dd24-4152-a360-1387158cd41d")
 	{
 		this.runnerLogger = runnerLogger;
@@ -53,6 +56,7 @@ public sealed class TestPlatformTestFramework :
 		this.projectAssembly = projectAssembly;
 		this.testAssembly = testAssembly;
 		this.trxCapability = trxCapability;
+		this.outputDevice = outputDevice;
 	}
 
 	/// <inheritdoc/>
@@ -130,7 +134,12 @@ public sealed class TestPlatformTestFramework :
 				// TODO: We'd prefer true for Test Explorer and false for `dotnet test`
 				projectAssembly.Configuration.PreEnumerateTheories ??= true;
 
-				var messageHandler = new TestPlatformExecutionMessageSink(innerSink, requestContext, request, trxCapability);
+				// If the user wants live output, we'll turn it off in the configuration (so the default reporter doesn't
+				// report it) and instead tell the message sink to display it.
+				var showLiveOutput = projectAssembly.Configuration.ShowLiveOutputOrDefault;
+				projectAssembly.Configuration.ShowLiveOutput = false;
+
+				var messageHandler = new TestPlatformExecutionMessageSink(innerSink, requestContext, request, trxCapability, outputDevice, showLiveOutput);
 				await projectRunner.Run(projectAssembly, messageHandler, diagnosticMessageSink, runnerLogger, pipelineStartup, testCaseIDsToRun);
 
 				foreach (var output in projectAssembly.Project.Configuration.Output)
@@ -222,7 +231,7 @@ public sealed class TestPlatformTestFramework :
 				var reporter = new DefaultRunnerReporter();
 				var reporterMessageHandler = reporter.CreateMessageHandler(runnerLogger, diagnosticMessageSink).SpinWait();
 
-				return new TestPlatformTestFramework(runnerLogger, reporterMessageHandler, diagnosticMessageSink, projectAssembly, testAssembly, trxCapability);
+				return new TestPlatformTestFramework(runnerLogger, reporterMessageHandler, diagnosticMessageSink, projectAssembly, testAssembly, trxCapability, outputDevice);
 			}
 		);
 

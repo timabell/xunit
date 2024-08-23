@@ -94,7 +94,6 @@ internal sealed class CommandLineOptionsProvider() :
 			""", ArgumentArity.ExactlyOne, OnSeed) },
 		{ "show-live-output", ("""
 			Determine whether to show test output (from ITestOutputHelper) live during test execution.
-			Note: this information will not be visible unless --xunit-info is also specified.
 			    on  - turn on live reporting of test output
 			    off - turn off live reporting of test output [default]
 			""", ArgumentArity.ExactlyOne, OnShowLiveOutput) },

@@ -1,7 +1,9 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Xunit.Runner.Common;
 using Xunit.Sdk;
@@ -13,8 +15,10 @@ internal sealed class TestPlatformExecutionMessageSink(
 	IMessageSink innerSink,
 	ExecuteRequestContext requestContext,
 	RunTestExecutionRequest request,
-	XunitTrxCapability trxCapability) :
-		ExtensionBase("execution message sink", "fa7e6681-c892-4741-9980-724bd818f1f1"), IMessageSink, IDataProducer
+	XunitTrxCapability trxCapability,
+	IOutputDevice outputDevice,
+	bool showLiveOutput) :
+		OutputDeviceDataProducerBase("execution message sink", "fa7e6681-c892-4741-9980-724bd818f1f1"), IMessageSink, IDataProducer
 {
 	readonly MessageMetadataCache metadataCache = new();
 
@@ -36,8 +40,20 @@ internal sealed class TestPlatformExecutionMessageSink(
 			message.DispatchWhen<ITestPassed>(args => SendTestResult(args.Message)) &&
 			message.DispatchWhen<ITestSkipped>(args => SendTestResult(args.Message)) &&
 			message.DispatchWhen<ITestStarting>(args => SendTestResult(args.Message)) &&
+			message.DispatchWhen<ITestOutput>(OnLiveOutput) &&
 			result &&
 			!requestContext.CancellationToken.IsCancellationRequested;
+	}
+
+	void OnLiveOutput(MessageHandlerArgs<ITestOutput> args)
+	{
+		if (!showLiveOutput)
+			return;
+
+		var testOutput = args.Message;
+		var testMetadata = metadataCache.TryGetTestMetadata(testOutput);
+
+		outputDevice.DisplayAsync(this, ToMessageWithColor(string.Format(CultureInfo.CurrentCulture, "OUTPUT: [{0}] {1}", testMetadata?.TestDisplayName ?? "<unknown test>", testOutput.Output.TrimEnd()), ConsoleColor.DarkGray)).SpinWait();
 	}
 
 	void SendTestResult(ITestMessage testMessage)
@@ -73,7 +89,13 @@ internal sealed class TestPlatformExecutionMessageSink(
 			result.Properties.Add(nodeState);
 
 		if (testStarting is not null && testMessage is ITestResultMessage testResult)
+		{
 			result.Properties.Add(new TimingProperty(new TimingInfo(testStarting.StartTime, testResult.FinishTime, TimeSpan.FromSeconds((double)testResult.ExecutionTime))));
+
+			if (testResult.Warnings is not null)
+				foreach (var warning in testResult.Warnings)
+					outputDevice.DisplayAsync(this, ToMessageWithColor(string.Format(CultureInfo.CurrentCulture, "WARNING: [{0}] {1}", testStarting.TestDisplayName, warning), ConsoleColor.Yellow)).SpinWait();
+		}
 
 		var testAssemblyMetadata = metadataCache.TryGetAssemblyMetadata(testMessage);
 		var testCaseMetadata = metadataCache.TryGetTestCaseMetadata(testMessage);
