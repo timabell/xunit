@@ -20,31 +20,141 @@ internal sealed class CommandLineOptionsProvider() :
 	static readonly Dictionary<string, (string Description, ArgumentArity Arity, Action<ParseOptions> Parse)> options = new(StringComparer.OrdinalIgnoreCase)
 	{
 		// General options
-		{ "culture", ("Run tests under the given culture. The available values are: 'default' (system culture) [default], 'invariant' (invariant culture), and any system culture (i.e., 'en-US').", ArgumentArity.ExactlyOne, OnCulture) },
-		{ "explicit", ("Change the way explicit tests are handled. The available values are: 'off' (only run non-explicit tests) [default], 'on' (run both explicit and non-explicit tests), and 'only' (only run explicit tests).", ArgumentArity.ExactlyOne, OnExplicit) },
-		{ "fail-skips", ("Change the way skipped tests are handled. The available values are: 'off' (report as skipped) [default], 'on' (reported as failed).", ArgumentArity.ExactlyOne, OnFailSkips) },
-		{ "fail-warns", ("Change the way passing tests with warnings are handled. The available values are: 'off' (report as passing) [default], 'on' (reported as failed).", ArgumentArity.ExactlyOne, OnFailWarns) },
-		{ "max-threads", ("Set maximum thread count for collection parallelization. The available values are: 'default' (1 thread per CPU thread) [default], 'unlimited' (run with unbounded thread count), '(integer)' (use exactly this many threads; i.e., '2' = 2 threads), '(float)x' (use a multiple of CPU threads; i.e., '2.0x' = 2.0 * CPU threads).", ArgumentArity.ExactlyOne, OnMaxThreads) },
-		{ "method-display", ("Set default test display name. The available values are: 'classAndMethod' (use a fully qualified name) [default], 'method' (use just the method name).", ArgumentArity.ExactlyOne, OnMethodDisplay) },
-		{ "method-display-options", ("Alters the default test display name. The available values are: 'none' (no altertions) [default], 'all' (all alterations), or one of more of: 'replacePeriodWithComma' (replace periods in names with commas), 'replaceUnderscoreWithSpace' (replace underscores in names with spaces), 'useOperatorMonikers' (replace 'lt' with '<', 'le' with '<=', 'eq' with '=', 'ne' with '!=', 'gt' with '>', and 'ge' with '>='), 'useEscapeSequences' (replace ASCII and Unicode escape sequences; i.e., 'X2C' becomes ',', 'U0192' becomes '\u0192').", ArgumentArity.OneOrMore, OnMethodDisplayOptions) },
-		{ "parallel", ("Change test parallelization. The available values are: 'none' (turn off parallelization), 'collections' (parallelize by test collection) [default].", ArgumentArity.ExactlyOne, OnParallel) },
-		{ "parallel-algorithm", ("Change the parallelization algorithm. The available values are: 'conservative' (start the minimum number of tests) [default], 'aggressive' (start as many tests as possible).", ArgumentArity.ExactlyOne, OnParallelAlgorithm) },
-		{ "pre-enumerate-theories", ("Change theory pre-enumeration during discovery. The available values are: 'on' [default], 'off'.", ArgumentArity.ExactlyOne, OnPreEnumerateTheories) },
-		{ "seed", ("Set the randomization seed. Pass an integer seed value.", ArgumentArity.ExactlyOne, OnSeed) },
-		{ "show-live-output", ("Determine whether to show test output (from ITestOutputHelper) live during test execution. The available values are: 'on', 'off' [default]", ArgumentArity.ExactlyOne, OnShowLiveOutput) },
-		{ "stop-on-fail", ("Stop running tests after the first test failure. The available values are: 'on', 'off' [default]", ArgumentArity.ExactlyOne, OnStopOnFail) },
-		{ "xunit-diagnostics", ("Determine whether to show diagnostic messages. The available values are: 'on', 'off' [default]", ArgumentArity.ExactlyOne, OnDiagnostics) },
-		{ "xunit-internal-diagnostics", ("Determine whether to show internal diagnostic messages. The available values are: 'on', 'off' [default]", ArgumentArity.ExactlyOne, OnInternalDiagnostics) },
+		{ "culture", (
+			"""
+			Run tests under the given culture.
+			    default   - run with the default operating system culture [default]
+			    invariant - run with the invariant culture
+			    (string)  - run with the given culture (i.e., 'en-US')
+			""", ArgumentArity.ExactlyOne, OnCulture) },
+		{ "explicit", ("""
+			Change the way explicit tests are handled.
+			    on   - run both explicit and non-explicit tests
+			    off  - run only non-explicit tests [default]
+			    only - run only explicit tests
+			""", ArgumentArity.ExactlyOne, OnExplicit) },
+		{ "fail-skips", ("""
+			Change the way skipped tests are handled.
+			    on  - treat skipped tests as failed
+			    off - treat skipped tests as skipped [default]
+			""", ArgumentArity.ExactlyOne, OnFailSkips) },
+		{ "fail-warns", ("""
+			Change the way passing tests with warnings are handled.
+			    on  - treat passing tests with warnings as failed
+			    off - treat passing tests with warnings as passed [default]
+			""", ArgumentArity.ExactlyOne, OnFailWarns) },
+		{ "max-threads", ("""
+			Set maximum thread count for collection parallelization.
+			    default   - run with default (1 thread per CPU thread)
+			    unlimited - run with unbounded thread count
+			    (integer) - use exactly this many threads (e.g., '2' = 2 threads)
+			    (float)x  - use a multiple of CPU threads (e.g., '2.0x' = 2.0 * the number of CPU threads)
+			""", ArgumentArity.ExactlyOne, OnMaxThreads) },
+		{ "method-display", ("""
+			Set default test display name.
+			    classAndMethod - use a fully qualified name [default]
+			    method         - use just the method name
+			""", ArgumentArity.ExactlyOne, OnMethodDisplay) },
+		{ "method-display-options", ("""
+			Alters the default test display name.
+			    none - apply no alterations [default]
+			    all  - apply all alterations
+			    Or one or more of:
+			        replacePeriodWithComma     - replace periods in names with commas
+			        replaceUnderscoreWithSpace - replace underscores in names with spaces
+			        useOperatorMonikers        - replace operator names with operators
+			                                         'lt' becomes '<'
+			                                         'le' becomes '<='
+			                                         'eq' becomes '='
+			                                         'ne' becomes '!='
+			                                         'gt' becomes '>'
+			                                         'ge' becomes '>='
+			        useEscapeSequences         - replace ASCII and Unicode escape sequences
+			                                         X + 2 hex digits (i.e., 'X2C' becomes ',')
+			                                         U + 4 hex digits (i.e., 'U0192' becomes 'ƒ')
+			""", ArgumentArity.OneOrMore, OnMethodDisplayOptions) },
+		{ "parallel", ("""
+			Change test parallelization.
+			    none        - turn off parallelization
+			    collections - parallelize by collections [default]
+			""", ArgumentArity.ExactlyOne, OnParallel) },
+		{ "parallel-algorithm", ("""
+			Change the parallelization algorithm.
+			    conservative - start the minimum number of tests [default]
+			    aggressive   - start as many tests as possible
+			""", ArgumentArity.ExactlyOne, OnParallelAlgorithm) },
+		{ "pre-enumerate-theories", ("""
+			Change theory pre-enumeration during discovery.
+			    on  - turns on theory pre-enumeration [default]
+			    off - turns off theory pre-enumeration
+			""", ArgumentArity.ExactlyOne, OnPreEnumerateTheories) },
+		{ "seed", ("""
+			Set the randomization seed.
+			    (integer) - use this as the randomization seed"
+			""", ArgumentArity.ExactlyOne, OnSeed) },
+		{ "show-live-output", ("""
+			Determine whether to show test output (from ITestOutputHelper) live during test execution.
+			Note: this information will not be visible unless --xunit-info is also specified.
+			    on  - turn on live reporting of test output
+			    off - turn off live reporting of test output [default]
+			""", ArgumentArity.ExactlyOne, OnShowLiveOutput) },
+		{ "stop-on-fail", ("""
+			Stop running tests after the first test failure.
+			    on  - stop running tests after the first test failure
+			    off - run all tests regardless of failures [default]
+			""", ArgumentArity.ExactlyOne, OnStopOnFail) },
+		{ "xunit-diagnostics", ("""
+			Determine whether to show diagnostic messages.
+			    on  - display diagnostic messages
+			    off - hide diagnostic messages [default]
+			""", ArgumentArity.ExactlyOne, OnDiagnostics) },
+		{ "xunit-internal-diagnostics", ("""
+			Determine whether to show internal diagnostic messages.
+			    on  - display internal diagnostic messages
+			    off - hide internal diagnostic messages [default]
+			""", ArgumentArity.ExactlyOne, OnInternalDiagnostics) },
 
 		// Filtering
-		{ "filter-class", ("Run all methods in a given test class. Pass one or more fully qualified type names (i.e., 'MyNamespace.MyClass' or 'MyNamespace.MyClass+InnerClass'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.IncludedClasses)) },
-		{ "filter-not-class", ("Do not run any methods in the given test class. Pass one or more fully qualified type names (i.e., 'MyNamspace.MyClass', or 'MyNamspace.MyClass+InnerClass'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.ExcludedClasses)) },
-		{ "filter-method", ("Run a given test method. Pass one ore more fully qualified method names or wildcards (i.e. 'MyNamespace.MyClass.MyTestMethod' or '*.MyTestMethod'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.IncludedMethods)) },
-		{ "filter-not-method", ("Do not run a given test method. Pass one ore more fully qualified method names or wildcards (i.e., 'MyNamspace.MyClass.MyTestMethod', or '*.MyTestMethod'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.ExcludedMethods)) },
-		{ "filter-namespace", ("Run all methods in the given namespace. Pass one or more namespaces (i.e. 'MyNamespace' or 'MyNamespace.MySubNamespace'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.IncludedNamespaces)) },
-		{ "filter-not-namespace", ("Do not run any methods in the given namespace. Pass one or more namespaces (i.e. 'MyNamespace' or 'MyNamespace.MySubNamespace'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.ExcludedNamespaces)) },
-		{ "filter-trait", ("Run all methods with a given trait value. Pass one or more name/value pairs (i.e. 'name=value'). Specifying more than one is an OR operation.", ArgumentArity.OneOrMore, options => OnFilterTrait(options.Arguments, options.AssemblyConfig.Filters.IncludedTraits)) },
-		{ "filter-not-trait", ("Do not run any methods with a given trait value. Pass one or more name/value pairs (i.e., 'name=value'). Specifying more than one is an AND operation.", ArgumentArity.OneOrMore, options => OnFilterTrait(options.Arguments, options.AssemblyConfig.Filters.ExcludedTraits)) },
+		{ "filter-class", ("""
+			Run all methods in a given test class. Pass one or more fully qualified type names (i.e.,
+			'MyNamespace.MyClass' or 'MyNamespace.MyClass+InnerClass').
+			    Note: Specifying more than one is an OR operation.
+			""", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.IncludedClasses)) },
+		{ "filter-not-class", ("""
+			Do not run any methods in the given test class. Pass one or more fully qualified type names
+			(i.e., 'MyNamspace.MyClass', or 'MyNamspace.MyClass+InnerClass').
+			    Note: Specifying more than one is an AND operation.
+			""", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.ExcludedClasses)) },
+		{ "filter-method", ("""
+			Run a given test method. Pass one or more fully qualified method names or wildcards (i.e.,
+			'MyNamespace.MyClass.MyTestMethod' or '*.MyTestMethod').
+			    Note: Specifying more than one is an OR operation.
+			""", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.IncludedMethods)) },
+		{ "filter-not-method", ("""
+			Do not run a given test method. Pass one or more fully qualified method names or wildcards
+			(i.e., 'MyNamspace.MyClass.MyTestMethod', or '*.MyTestMethod').
+			    Note: Specifying more than one is an AND operation.
+			""", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.ExcludedMethods)) },
+		{ "filter-namespace", ("""
+			Run all methods in the given namespace. Pass one or more namespaces (i.e., 'MyNamespace' or
+			'MyNamespace.MySubNamespace').
+			    Note: Specifying more than one is an OR operation.
+			""", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.IncludedNamespaces)) },
+		{ "filter-not-namespace", ("""
+			Do not run any methods in the given namespace. Pass one or more namespaces (i.e., 'MyNamespace'
+			or 'MyNamespace.MySubNamespace').
+			    Note: Specifying more than one is an AND operation.
+			""", ArgumentArity.OneOrMore, options => OnFilter(options.Arguments, options.AssemblyConfig.Filters.ExcludedNamespaces)) },
+		{ "filter-trait", ("""
+			Run all methods with a given trait value. Pass one or more name/value pairs (i.e.,
+			'name=value').
+			    Note: Specifying more than one is an OR operation.
+			""", ArgumentArity.OneOrMore, options => OnFilterTrait(options.Arguments, options.AssemblyConfig.Filters.IncludedTraits)) },
+		{ "filter-not-trait", ("""
+			Do not run any methods with a given trait value. Pass one or more name/value pairs (i.e.,
+			'name=value').
+			    Note: Specifying more than one is an AND operation.
+			""", ArgumentArity.OneOrMore, options => OnFilterTrait(options.Arguments, options.AssemblyConfig.Filters.ExcludedTraits)) },
 
 		// Reports
 		{ "report-ctrf", ("Enable generating CTRF (JSON) report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "ctrf", "ctrf", options.ProjectConfig)) },

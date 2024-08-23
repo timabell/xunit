@@ -8,7 +8,7 @@
     <MicrosoftNetCoreAppRefVersion>8.0.5</MicrosoftNetCoreAppRefVersion>
     <MicrosoftNetFrameworkReferenceAssembliesVersion>1.0.3</MicrosoftNetFrameworkReferenceAssembliesVersion>
     <MicrosoftSourceLinkGitHubVersion>8.0.0</MicrosoftSourceLinkGitHubVersion>
-    <MicrosoftTestingPlatformVersion>1.4.0-preview.24421.8</MicrosoftTestingPlatformVersion>
+    <MicrosoftTestingPlatformVersion>1.4.0-preview.24423.1</MicrosoftTestingPlatformVersion>
     <NerdbankGitVersioningVersion>3.6.141</NerdbankGitVersioningVersion>
     <TunnelVisionLabsReferenceAssemblyAnnotatorVersion>1.0.0-alpha.160</TunnelVisionLabsReferenceAssemblyAnnotatorVersion>
     <XunitAnalyzersVersion>1.16.0-pre.23</XunitAnalyzersVersion>
