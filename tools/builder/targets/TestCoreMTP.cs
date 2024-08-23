@@ -28,28 +28,28 @@ public static class TestCoreMTP
 
 		context.BuildStep($"Running .NET tests ({framework}, AnyCPU, via 'dotnet test')");
 
-		await RunTestAssemblies(context, framework, x86: false);
+		await RunTestAssemblies(context, "dotnet", framework, x86: false);
 
-#if false
 		// ------------- Forced x86 -------------
 
-		// Only run 32-bit .NET Core tests on Windows
-		if (context.NeedMono)
-			return;
+		// Only Windows supports side-by-side 64- and 32-bit installs of .NET SDK
+		if (!context.NeedMono)
+		{
+			// Only run 32-bit .NET Core tests if 32-bit .NET Core is installed
+			var programFilesX86 = Environment.GetEnvironmentVariable("ProgramFiles(x86)");
+			if (programFilesX86 is not null)
+			{
 
-		// Only run 32-bit .NET Core tests if 32-bit .NET Core is installed
-		var programFilesX86 = Environment.GetEnvironmentVariable("ProgramFiles(x86)");
-		if (programFilesX86 == null)
-			return;
+				var x86Dotnet = Path.Combine(programFilesX86, "dotnet", "dotnet.exe");
+				if (File.Exists(x86Dotnet))
+				{
 
-		var x86Dotnet = Path.Combine(programFilesX86, "dotnet", "dotnet.exe");
-		if (!File.Exists(x86Dotnet))
-			return;
+					context.BuildStep($"Running .NET tests ({framework}, x86, via 'dotnet test')");
 
-		context.BuildStep($"Running .NET tests ({framework}, x86, via 'dotnet test')");
-
-		await RunTestAssemblies(context, framework, x86: true);
-#endif
+					await RunTestAssemblies(context, x86Dotnet, framework, x86: true);
+				}
+			}
+		}
 
 		// Clean out all the 'dotnet test' log files, because if we got this far everything succeeded
 
@@ -59,6 +59,7 @@ public static class TestCoreMTP
 
 	static async Task RunTestAssemblies(
 		BuildContext context,
+		string dotnetPath,
 		string framework,
 		bool x86)
 	{
@@ -75,7 +76,7 @@ public static class TestCoreMTP
 			var outputFileName = $"{Path.GetFileNameWithoutExtension(testAssembly)}-{framework}-{(x86 ? "x86" : "AnyCPU")}-mtp";
 			var projectFolder = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(testAssembly))));
 
-			await context.Exec("dotnet", $"test {projectFolder} --configuration {context.ConfigurationText} --framework {framework} --no-build --no-restore -- {context.TestFlagsParallelMTP}--pre-enumerate-theories on --results-directory \"{context.TestOutputFolder}\" --report-xunit --report-xunit-filename \"{outputFileName}.xml\" --report-html --report-html-filename \"{outputFileName}.html\" --report-ctrf --report-ctrf-filename \"{outputFileName}.ctrf\"", workingDirectory: context.BaseFolder);
+			await context.Exec(dotnetPath, $"test {projectFolder} --configuration {context.ConfigurationText} --framework {framework} --no-build --no-restore -- {context.TestFlagsParallelMTP}--pre-enumerate-theories on --results-directory \"{context.TestOutputFolder}\" --report-xunit --report-xunit-filename \"{outputFileName}.xml\" --report-html --report-html-filename \"{outputFileName}.html\" --report-ctrf --report-ctrf-filename \"{outputFileName}.ctrf\"", workingDirectory: context.BaseFolder);
 		}
 	}
 }
