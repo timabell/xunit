@@ -65,7 +65,7 @@ public static class TestFxMTP
 			var outputFileName = $"{Path.GetFileNameWithoutExtension(testAssembly)}-net472-{(x86 ? "x86" : "AnyCPU")}-mtp";
 			var projectFolder = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(testAssembly))));
 
-			await context.Exec(dotnetPath, $"test {projectFolder} --configuration {context.ConfigurationText} --framework net472 --no-build --no-restore -- {context.TestFlagsParallelMTP}--pre-enumerate-theories on --results-directory \"{context.TestOutputFolder}\" --report-xunit --report-xunit-filename \"{outputFileName}.xml\" --report-html --report-html-filename \"{outputFileName}.html\" --report-ctrf --report-ctrf-filename \"{outputFileName}.ctrf\"", workingDirectory: context.BaseFolder);
+			await context.Exec(dotnetPath, $"test {projectFolder} --configuration {context.ConfigurationText} --framework net472 --no-build --no-restore -- {context.TestFlagsParallelMTP}--pre-enumerate-theories on --results-directory \"{context.TestOutputFolder}\" --report-xunit --report-xunit-filename \"{outputFileName}.xml\" --report-xunit-html --report-xunit-html-filename \"{outputFileName}.html\" --report-ctrf --report-ctrf-filename \"{outputFileName}.ctrf\"", workingDirectory: context.BaseFolder);
 		}
 	}
 }

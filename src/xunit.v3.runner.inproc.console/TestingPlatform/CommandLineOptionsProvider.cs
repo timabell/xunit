@@ -158,14 +158,14 @@ internal sealed class CommandLineOptionsProvider() :
 		// Reports
 		{ "report-ctrf", ("Enable generating CTRF (JSON) report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "ctrf", "ctrf", options.ProjectConfig)) },
 		{ "report-ctrf-filename", ("The name of the generated CTRF report", ArgumentArity.ExactlyOne, OnReportFilename) },
-		{ "report-html", ("Enable generating HTML report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "html", "html", options.ProjectConfig)) },
-		{ "report-html-filename", ("The name of the generated HTML report", ArgumentArity.ExactlyOne, OnReportFilename) },
 		{ "report-junit", ("Enable generating JUnit (XML) report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "junit", "junit", options.ProjectConfig)) },
 		{ "report-junit-filename", ("The name of the generated JUnit report", ArgumentArity.ExactlyOne, OnReportFilename) },
 		{ "report-nunit", ("Enable generating NUnit (v2.5 XML) report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "nunit", "nunit", options.ProjectConfig)) },
 		{ "report-nunit-filename", ("The name of the generated NUnit report", ArgumentArity.ExactlyOne, OnReportFilename) },
 		{ "report-xunit", ("Enable generating xUnit.net (v2+ XML) report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "xml", "xunit", options.ProjectConfig)) },
 		{ "report-xunit-filename", ("The name of the generated xUnit.net report", ArgumentArity.ExactlyOne, OnReportFilename) },
+		{ "report-xunit-html", ("Enable generating xUnit.net HTML report", ArgumentArity.Zero, options => OnReport(options.Configuration, options.CommandLineOptions, "html", "xunit-html", options.ProjectConfig)) },
+		{ "report-xunit-html-filename", ("The name of the generated xUnit.net HTML report", ArgumentArity.ExactlyOne, OnReportFilename) },
 
 		// Non-configuration options (read externally)
 		{ "xunit-info", ("Show xUnit.net headers and information", ArgumentArity.Zero, NoOp) },
